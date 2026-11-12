@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
-const toEnDigits = (s: string) =>
-  s.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+const toEnDigits = (s: string) => s.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
 
 type VerifyState = "form" | "verifying" | "success";
 
@@ -20,10 +19,16 @@ export default function VerifyPage() {
 
   useEffect(() => {
     if (!isLoggedIn) router.replace("/auth/login");
-    else if (isVerified && !transitioning) router.replace("/");
+    else if (isVerified && !transitioning) {
+      // اگر قبلاً تایید شده، بر اساس وضعیت PIN و قوانین هدایت شود
+      // این منطق در Appshell یا صفحات بعدی هم هست، ولی اینجا هم برای اطمینان
+      // router.replace("/auth/pin"); // یا مسیر مناسب
+    }
   }, [isLoggedIn, isVerified, transitioning, router]);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const isValid = /^\d{10}$/.test(nationalId);
 
@@ -32,13 +37,13 @@ export default function VerifyPage() {
     setError("");
     setState("verifying");
     setTransitioning(true);
-
     const result = await verifyShahkar(nationalId);
     if (result.success) {
       setState("success");
       setTimeout(() => {
-        if (result.hasPin) router.replace("/auth/pin");
-        else router.replace("/");
+        // بعد از KYC موفق، همیشه به صفحه PIN برو
+        // اگر PIN نداشته باشد، آنجا تنظیم می‌کند؛ اگر داشته باشد، وارد می‌شود
+        router.replace("/auth/pin");
       }, 1400);
     } else {
       setTransitioning(false);
@@ -49,30 +54,25 @@ export default function VerifyPage() {
   }
 
   const progressBar = (
-    <div className="flex gap-1 px-5 pt-4">
-      <div className="flex-1 h-0.5 rounded-full bg-[var(--gold)]" />
-      <div className="flex-1 h-0.5 rounded-full bg-[var(--gold)]" />
-      <div className="flex-1 h-0.5 rounded-full bg-[var(--gold)]" />
+    <div className="h-1 w-full bg-[var(--border)] rounded-full overflow-hidden mb-6">
+      <div className={`h-full bg-[var(--gold)] rounded-full transition-all duration-500 ${state === "form" ? "w-1/3" : "w-full"}`} />
     </div>
   );
 
   if (state === "verifying") {
     return (
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/80 backdrop-blur-xl shadow-xl overflow-hidden">
-        {progressBar}
-        <div className="p-6 text-center slide-in-left">
-          <div className="relative inline-block mb-4">
-            <div className="absolute inset-0 bg-[var(--gold)] opacity-30 rounded-full blur-xl animate-pulse" />
-            <div className="relative w-16 h-16 rounded-full bg-[var(--gold)]/10 border-2 border-[var(--gold)]/40 flex items-center justify-center text-2xl">🔍</div>
+      <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)] px-4" dir="rtl">
+        <div className="w-full max-w-sm text-center">
+          {progressBar}
+          <div className="w-16 h-16 mx-auto rounded-full bg-sky-500/10 border-2 border-sky-500/40 flex items-center justify-center mb-4">
+            <span className="w-8 h-8 border-2 border-sky-400/30 border-t-sky-400 rounded-full animate-spin" />
           </div>
-          <h1 className="text-base font-bold mb-1.5">در حال استعلام</h1>
-          <p className="text-[11px] text-[var(--muted)] mb-5 leading-relaxed">
-            در حال تطبیق کد ملی با شماره
+          <h1 className="text-base font-bold mb-2">در حال استعلام</h1>
+          <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+            در حال تطبیق کد ملی با شماره {user?.phone}
             <br />
-            <span dir="ltr" className="font-mono font-bold text-[var(--text)]">{user?.phone}</span>
+            از سامانه شاهکار
           </p>
-          <div className="w-8 h-8 border-2 border-[var(--gold)]/30 border-t-[var(--gold)] rounded-full animate-spin mx-auto" />
-          <p className="text-[9.5px] text-[var(--muted)] mt-3">سامانه شاهکار</p>
         </div>
       </div>
     );
@@ -80,89 +80,58 @@ export default function VerifyPage() {
 
   if (state === "success") {
     return (
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/80 backdrop-blur-xl shadow-xl overflow-hidden">
-        {progressBar}
-        <div className="p-6 text-center fade-in">
-          <div className="relative inline-block mb-4">
-            <div className="absolute inset-0 bg-emerald-500 opacity-30 rounded-full blur-xl animate-pulse" />
-            <div className="relative w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
+      <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)] px-4" dir="rtl">
+        <div className="w-full max-w-sm text-center">
+          {progressBar}
+          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center mb-4">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
           </div>
-          <h1 className="text-base font-bold mb-1.5">احراز هویت موفق</h1>
-          <p className="text-xs text-[var(--muted)]">
-            خوش آمدید، <span className="font-bold text-[var(--text)]">{user?.firstName} {user?.lastName}</span>
-          </p>
-          <p className="text-[10px] text-emerald-400 mt-2.5 flex items-center justify-center gap-1.5">
-            <span className="w-2.5 h-2.5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-            در حال انتقال...
-          </p>
+          <h1 className="text-base font-bold mb-2">احراز هویت موفق</h1>
+          <p className="text-[11px] text-[var(--muted)]">خوش آمدید، {user?.firstName} {user?.lastName}</p>
+          <p className="text-[10px] text-[var(--muted)] mt-2">در حال انتقال به مرحله بعد...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)]/80 backdrop-blur-xl shadow-xl overflow-hidden">
-      {progressBar}
-      <div className="p-5 slide-in-right">
-        <div className="w-11 h-11 rounded-xl bg-[var(--gold)]/10 border border-[var(--gold)]/30 flex items-center justify-center text-xl mb-3">
-          🆔
-        </div>
-        <h1 className="text-base font-bold mb-1">احراز هویت</h1>
-        <p className="text-[11px] text-[var(--muted)] mb-5 leading-relaxed">
-          کد ملی خود را وارد کنید تا با شماره موبایل شما تطبیق داده شود.
-        </p>
-
-        <label className="text-[10px] text-[var(--muted)] block mb-1.5">کد ملی</label>
-        <div
-          className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${
-            error
-              ? "border-red-500/50"
-              : isValid
-              ? "border-emerald-500/50"
-              : "border-[var(--border)] focus-within:border-[var(--gold)]"
-          }`}
-        >
-          <input
-            ref={inputRef}
-            type="tel"
-            inputMode="numeric"
-            value={nationalId}
-            onChange={e => { setNationalId(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 10)); setError(""); }}
-            onKeyDown={e => { if (e.key === "Enter" && isValid) handleVerify(); }}
-            placeholder="۱۰ رقم"
-            className="w-full bg-transparent text-left text-lg font-black tracking-[0.15em] text-[var(--text)] placeholder:text-[var(--muted)] placeholder:tracking-[0.1em] placeholder:font-normal placeholder:text-xs outline-none"
-            dir="ltr"
-          />
+    <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)] px-4" dir="rtl">
+      <div className="w-full max-w-sm">
+        {progressBar}
+        <div className="text-center mb-5">
+          <div className="text-2xl font-black text-[var(--gold)] font-serif italic tracking-widest mb-1">KIFE ZARGAR</div>
+          <h1 className="text-base font-bold mt-3">احراز هویت</h1>
+          <p className="text-[10.5px] text-[var(--muted)] mt-1 leading-relaxed">کد ملی خود را وارد کنید تا با شماره موبایل شما تطبیق داده شود.</p>
         </div>
 
-        {/* نوار پیشرفت رقم */}
-        <div className="flex items-center gap-2 mt-2 mb-4">
-          <div className="flex-1 h-0.5 rounded-full bg-[var(--border)] overflow-hidden">
-            <div
-              className={`h-full transition-all duration-300 ${isValid ? "bg-emerald-500" : "bg-[var(--gold)]"}`}
-              style={{ width: `${(nationalId.length / 10) * 100}%` }}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
+          <label className="text-[10px] text-[var(--muted)] block mb-1.5">کد ملی</label>
+          <div className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${nationalId.length > 0 && !isValid ? "border-red-500/50" : nationalId.length === 10 ? "border-emerald-500/50" : "border-[var(--border)] focus-within:border-[var(--gold)]"}`}>
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              value={nationalId}
+              onChange={e => { setNationalId(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 10)); setError(""); }}
+              onKeyDown={e => { if (e.key === "Enter" && isValid) handleVerify(); }}
+              placeholder="۱۰ رقم"
+              className="w-full bg-transparent text-center text-lg font-black tracking-[0.15em] text-[var(--text)] placeholder:text-[var(--muted)] placeholder:tracking-[0.1em] placeholder:font-normal placeholder:text-xs outline-none"
+              dir="ltr"
             />
           </div>
-          <span className="text-[9.5px] text-[var(--muted)] font-mono shrink-0" dir="ltr">{nationalId.length}/10</span>
+          <div className="text-[9px] text-[var(--muted)] text-center mt-1">{nationalId.length}/10</div>
+          {error && <p className="text-[10px] text-red-400 text-center mt-2">{error}</p>}
+          <p className="text-[9px] text-[var(--muted)] text-center mt-3 leading-relaxed">استعلام خودکار از سامانه شاهکار انجام می‌شود.</p>
+          <button
+            onClick={handleVerify}
+            disabled={!isValid}
+            className="w-full h-11 rounded-xl bg-[var(--gold)] text-black font-bold text-xs hover:bg-[var(--gold)]/90 disabled:opacity-40 disabled:cursor-not-allowed transition mt-3"
+          >
+            استعلام و ورود
+          </button>
         </div>
-
-        {error && <p className="text-[10px] text-red-400 mb-2.5 text-center">{error}</p>}
-
-        <div className="text-[9.5px] text-[var(--muted)] mb-3 bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2.5 leading-relaxed">
-          🔒 استعلام خودکار از سامانه شاهکار انجام می‌شود.
-        </div>
-
-        <button
-          onClick={handleVerify}
-          disabled={!isValid}
-          className="w-full h-10 rounded-xl bg-gradient-to-l from-[var(--gold)] to-[#d4b885] text-black font-bold text-xs hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-[var(--gold)]/20"
-        >
-          استعلام و ورود
-        </button>
       </div>
     </div>
   );

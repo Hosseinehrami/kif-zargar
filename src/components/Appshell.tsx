@@ -95,7 +95,7 @@ const UNREAD_COUNT = 3;
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isLoading, isLoggedIn, isVerified, hasPin, logout, lockSession, isSessionUnlocked } = useAuth();
+  const { user, isLoading, isLoggedIn, isVerified, hasPin, isTermsAccepted, logout, lockSession, isSessionUnlocked } = useAuth();
 
   const [theme, setTheme] = useState("dark");
   const [mounted, setMounted] = useState(false);
@@ -120,25 +120,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem("kif-theme", theme);
   }, [theme, mounted]);
 
-  // === محافظت از مسیرها — نیاز به ورود و تایید هویت ===
-  useEffect(() => {
-    if (isLoading) return;
-    const isPublicPage = pathname.startsWith("/auth") || pathname.startsWith("/verify");
-    if (isPublicPage) return;
-    if (!isLoggedIn) { router.replace("/auth/login"); return; }
-    if (!isVerified) { router.replace("/auth/verify"); return; }
-  }, [isLoading, isLoggedIn, isVerified, pathname, router]);
+  // === محافظت از مسیرها — نیاز به ورود + تایید + پذیرش قوانین ===
+useEffect(() => {
+  if (isLoading) return;
+  const isPublicPage = pathname.startsWith("/auth") || pathname.startsWith("/verify");
+  if (isPublicPage) return;
+  if (!isLoggedIn) { router.replace("/auth/login"); return; }
+  if (!isVerified) { router.replace("/auth/verify"); return; }
+  if (!isTermsAccepted) { router.replace("/auth/terms"); return; }
+}, [isLoading, isLoggedIn, isVerified, isTermsAccepted, pathname, router]);
 
-  // === قفل PIN — هدایت به صفحه ورود کد امن ===
-  useEffect(() => {
-    if (isLoading) return;
-    const isPublicPage = pathname.startsWith("/auth") || pathname.startsWith("/verify");
-    if (isPublicPage) return;
-    if (hasPin && !isSessionUnlocked()) {
-      router.replace("/auth/pin");
-    }
-  }, [isLoading, hasPin, pathname, router]);
-
+  
   // === بستن منوها با کلیک بیرون ===
   useEffect(() => {
     function handle(e: MouseEvent) {
