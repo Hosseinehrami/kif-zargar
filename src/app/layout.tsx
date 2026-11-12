@@ -6,9 +6,9 @@ import SplashScreen from "@/components/SplashScreen";
 import { AuthProvider } from "@/lib/auth-context";
 
 const vazir = localFont({
-  src: "./fonts/Vazirmatn[wght].woff2", // ← اگه اسم فایل رو عوض کردی، اینجا هم عوض کن
+  src: "./fonts/Vazirmatn[wght].woff2",
   variable: "--font-vazir",
-  weight: "100 900", // ← فونت متغیر، همه‌ی وزن‌ها
+  weight: "100 900",
   display: "swap",
 });
 
@@ -17,11 +17,7 @@ export const metadata: Metadata = {
   description: "پلتفرم مدیریت دارایی، خرید و فروش و معاملات طلا",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning className={vazir.variable}>
       <body>

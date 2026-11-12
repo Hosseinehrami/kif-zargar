@@ -65,6 +65,16 @@ function OrdersIcon() {
     </svg>
   );
 }
+function UsersIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
 
 const navItems = [
   { id: "home", label: "خانه", icon: "⌂", href: "/" },
@@ -73,6 +83,14 @@ const navItems = [
   { id: "assets", label: "دارایی‌ها", icon: "▤", href: "/assets" },
   { id: "wallet", label: "کیف پول", icon: "💳", href: "/wallet" },
 ];
+
+// اعلان‌های پیش‌نمایش (mock)
+const PREVIEW_NOTIFS = [
+  { emoji: "💰", title: "خرید طلا انجام شد", time: "۲ دقیقه پیش" },
+  { emoji: "📈", title: "هشدار قیمت طلا", time: "۱۵ دقیقه پیش" },
+  { emoji: "🔔", title: "به‌روزرسانی اپلیکیشن", time: "۱ ساعت پیش" },
+];
+const UNREAD_COUNT = 3;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -86,7 +104,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // === بارگذاری تم از localStorage ===
+  // === بارگذاری تم ===
   useEffect(() => {
     const saved = localStorage.getItem("kif-theme");
     const initialTheme = saved === "dark" || saved === "light" ? saved : "dark";
@@ -152,15 +170,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // === صفحات عمومی: auth و verify — بدون shell ===
+  // === صفحات عمومی ===
   if (pathname.startsWith("/auth") || pathname.startsWith("/verify")) {
     return <>{children}</>;
   }
 
-  // === نیاز به ورود و تایید — redirect در effect انجام شده ===
   if (!isLoggedIn || !isVerified) return null;
 
-  // === قفل PIN — redirect در effect انجام شده، اینجا فقط وضعیت گذرا ===
+  // === قفل PIN — وضعیت گذرا ===
   if (hasPin && !isSessionUnlocked()) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)]" dir="rtl">
@@ -208,23 +225,72 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <strong>سلام، {user?.firstName} {user?.lastName} 👋</strong>
           </div>
           <div className="top-actions">
-            <button onClick={() => setTheme((c) => (c === "dark" ? "light" : "dark"))} className="w-10 h-10 rounded-xl border border-[var(--border)] bg-[var(--panel)] flex items-center justify-center text-[var(--muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/50 transition">
+            {/* تم */}
+            <button
+              onClick={() => setTheme((c) => (c === "dark" ? "light" : "dark"))}
+              className="w-10 h-10 rounded-xl border border-[var(--border)] bg-[var(--panel)] flex items-center justify-center text-[var(--muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/50 transition"
+              aria-label="تغییر تم"
+            >
               {theme === "dark" ? <SunIcon /> : <MoonIcon />}
             </button>
 
+            {/* اعلان‌ها */}
             <div ref={notifRef} className="relative">
-              <button onClick={() => setNotifOpen(!notifOpen)} className={`relative w-10 h-10 rounded-xl border flex items-center justify-center transition ${notifOpen ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]" : "border-[var(--border)] bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--gold)]"}`}>
+              <button
+                onClick={() => setNotifOpen(!notifOpen)}
+                className={`relative w-10 h-10 rounded-xl border flex items-center justify-center transition ${
+                  notifOpen
+                    ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]"
+                    : "border-[var(--border)] bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--gold)]"
+                }`}
+                aria-label="اعلان‌ها"
+              >
                 <BellIcon />
+                {UNREAD_COUNT > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center shadow-md">
+                    {UNREAD_COUNT.toLocaleString("fa-IR")}
+                  </span>
+                )}
               </button>
               {notifOpen && (
-                <div className="absolute top-12 left-0 sm:left-auto sm:right-0 w-[290px] rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl z-50 p-4">
-                  <p className="text-xs text-center text-[var(--muted)]">اعلان‌ها اینجا قرار می‌گیرند</p>
+                <div className="absolute top-12 left-0 w-[320px] max-w-[calc(100vw-1rem)] rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl z-50 overflow-hidden">
+                  <div className="p-3 border-b border-[var(--border)] flex items-center justify-between">
+                    <div className="text-xs font-bold">اعلان‌ها</div>
+                    <span className="text-[9px] bg-red-500/15 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full font-bold">
+                      {UNREAD_COUNT.toLocaleString("fa-IR")} جدید
+                    </span>
+                  </div>
+                  <div className="p-2 space-y-1.5">
+                    {PREVIEW_NOTIFS.map((n, i) => (
+                      <div key={i} className="rounded-lg bg-[var(--panel-2)] p-2 border border-[var(--border)]">
+                        <div className="flex items-start gap-2">
+                          <span className="text-sm shrink-0">{n.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-bold truncate">{n.title}</div>
+                            <div className="text-[9px] text-[var(--muted)] mt-0.5">{n.time}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    href="/notifications"
+                    onClick={() => setNotifOpen(false)}
+                    className="block w-full text-center py-2.5 text-[11px] font-bold text-[var(--gold)] border-t border-[var(--border)] hover:bg-[var(--panel-2)] transition"
+                  >
+                    مشاهده همه اعلان‌ها
+                  </Link>
                 </div>
               )}
             </div>
 
+            {/* پروفایل */}
             <div ref={profileRef} className="relative">
-              <button onClick={() => setProfileOpen(!profileOpen)} className="w-10 h-10 rounded-xl border border-[var(--gold)]/40 bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] font-bold text-sm hover:border-[var(--gold)] transition">
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="w-10 h-10 rounded-xl border border-[var(--gold)]/40 bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] font-bold text-sm hover:border-[var(--gold)] transition"
+                aria-label="منوی پروفایل"
+              >
                 {user?.firstName?.charAt(0) || "؟"}
               </button>
               {profileOpen && (
@@ -236,6 +302,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
                   <Link href="/orders" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2">
                     <OrdersIcon /> سفارشات من
+                  </Link>
+
+                  <Link href="/referral" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">
+                    <UsersIcon /> دعوت از دوستان
                   </Link>
 
                   <Link
@@ -255,6 +325,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   <Link href="/settings" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">
                     <SettingsIcon /> تنظیمات
                   </Link>
+
+                  <Link href="/about" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12.01" y2="8" />
+  </svg>
+  درباره ما
+</Link>
 
                   {hasPin && (
                     <button
