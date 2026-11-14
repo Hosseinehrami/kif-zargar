@@ -151,7 +151,16 @@ export default function TermsPage() {
                   {signing ? "..." : "تأیید"}
                 </button>
               </div>
-              {error && <p className="text-[10px] text-red-400 text-center mt-2">{error}</p>}
+                            {error && <p className="text-[10px] text-red-400 text-center mt-2">{error}</p>}
+              
+              {/* 👇 این دکمه جدید */}
+              <button
+                type="button"
+                onClick={() => router.push("/auth/pin-recovery")}
+                className="w-full mt-3 text-[10px] text-[var(--muted)] hover:text-[var(--gold)] transition"
+              >
+                کد امن را فراموش کرده‌اید؟
+              </button>
             </div>
           )}
 
