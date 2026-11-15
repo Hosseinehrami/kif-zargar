@@ -120,15 +120,37 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem("kif-theme", theme);
   }, [theme, mounted]);
 
-  // === محافظت از مسیرها — نیاز به ورود + تایید + پذیرش قوانین ===
-useEffect(() => {
-  if (isLoading) return;
-  const isPublicPage = pathname.startsWith("/auth") || pathname.startsWith("/verify");
-  if (isPublicPage) return;
-  if (!isLoggedIn) { router.replace("/auth/login"); return; }
-  if (!isVerified) { router.replace("/auth/verify"); return; }
-  if (!isTermsAccepted) { router.replace("/auth/terms"); return; }
-}, [isLoading, isLoggedIn, isVerified, isTermsAccepted, pathname, router]);
+  // === محافظت از مسیرها — نیاز به ورود + تایید + پذیرش قوانین + قفل PIN ===
+  useEffect(() => {
+    if (isLoading) return;
+    
+    const isPublicPage = pathname.startsWith("/auth") || pathname.startsWith("/verify");
+    if (isPublicPage) return;
+
+    // 👇 ۱. اولویت اول: قفل PIN
+    if (hasPin && !isSessionUnlocked()) {
+      router.replace("/auth/pin");
+      return; // 👈 مهم: اینجا متوقف شو تا بقیه چک‌ها اجرا نشن
+    }
+
+    // ۲. چک کردن لاگین
+    if (!isLoggedIn) { 
+      router.replace("/auth/login"); 
+      return; 
+    }
+    
+    // ۳. چک کردن KYC
+    if (!isVerified) { 
+      router.replace("/auth/verify"); 
+      return; 
+    }
+    
+    // ۴. چک کردن قوانین
+    if (!isTermsAccepted) { 
+      router.replace("/auth/terms"); 
+      return; 
+    }
+  }, [isLoading, isLoggedIn, isVerified, isTermsAccepted, hasPin, pathname, router, isSessionUnlocked]);
 
   
   // === بستن منوها با کلیک بیرون ===

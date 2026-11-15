@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
@@ -9,9 +9,7 @@ const LOCK_SECONDS = 60;
 
 export default function PinPage() {
   const router = useRouter();
-  // 🔑 setPin از context رو به savePin تغییر نام دادیم تا با setPin محلی تداخل نداشته باشه
   const {
-    user,
     hasPin,
     isLoggedIn,
     isVerified,
@@ -19,7 +17,6 @@ export default function PinPage() {
     setPin: savePin,
     validatePin,
     unlockSession,
-    logout,
   } = useAuth();
 
   const [pin, setPin] = useState("");
@@ -28,13 +25,15 @@ export default function PinPage() {
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [lockRemain, setLockRemain] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  // اگر کاربر لاگین نیست
+  // رفرنس برای جلوگیری از اجرای دوباره auto-submit
+  const hasSubmitted = useRef(false);
+
   useEffect(() => {
     if (!isLoggedIn) router.replace("/auth/login");
   }, [isLoggedIn, router]);
 
-  // قفل شدن پس از تلاش‌های ناموفق
   useEffect(() => {
     if (!lockedUntil) return;
     const tick = () => {
@@ -51,53 +50,69 @@ export default function PinPage() {
     return () => clearInterval(t);
   }, [lockedUntil]);
 
-  // ارسال خودکار وقتی ۴ رقم وارد شد
+  // بررسی خودکار بعد از وارد کردن ۴ رقم
   useEffect(() => {
-    if (pin.length === 4 && !lockedUntil) {
+    if (pin.length === 4 && !lockedUntil && !hasSubmitted.current) {
+      hasSubmitted.current = true;
       handleVerify();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pin]);
+  }, [pin, lockedUntil]);
 
   function handleDigit(d: string) {
-    if (lockedUntil || pin.length >= 4) return;
+    if (lockedUntil || pin.length >= 4 || isVerifying) return;
     setError("");
     setPin((prev) => prev + d);
   }
 
   function handleBackspace() {
-    if (lockedUntil) return;
+    if (lockedUntil || isVerifying) return;
     setPin((prev) => prev.slice(0, -1));
     setError("");
+    hasSubmitted.current = false; // اجازه دوباره برای تایید
   }
 
   async function handleVerify() {
-    // حالت تنظیم اولیه PIN
+    setIsVerifying(true);
+    setError("");
+
+    // ۱. تنظیم اولیه PIN
     if (!hasPin) {
       try {
-        await savePin(pin); // 👈 از savePin استفاده می‌کنیم
+        await savePin(pin);
+        // بعد از ذخیره، برو به قوانین
         router.replace("/auth/terms");
         return;
       } catch (e: any) {
         setError(e.message || "خطا در تنظیم کد امن");
         setShake(true);
         await new Promise((r) => setTimeout(r, 400));
-        setPin(""); // 👈 این setPin محلیه (useState) — درسته
+        setPin("");
         setShake(false);
+        hasSubmitted.current = false;
+        setIsVerifying(false);
         return;
       }
     }
 
-    // حالت ورود با PIN
+    // ۲. ورود با PIN
     const correct = validatePin(pin);
     if (correct) {
       unlockSession();
-      if (!isVerified) router.replace("/auth/verify");
-      else if (!isTermsAccepted) router.replace("/auth/terms");
-      else router.replace("/");
+      
+      // یک تاخیر کوچک برای اطمینان از اینکه sessionStorage ذخیره شده
+      setTimeout(() => {
+        if (!isVerified) {
+          router.replace("/auth/verify");
+        } else if (!isTermsAccepted) {
+          router.replace("/auth/terms");
+        } else {
+          router.replace("/");
+        }
+      }, 50);
       return;
     }
 
+    // ۳. PIN اشتباه
     const newAttempts = attempts + 1;
     setAttempts(newAttempts);
     setShake(true);
@@ -106,9 +121,12 @@ export default function PinPage() {
       setLockedUntil(Date.now() + LOCK_SECONDS * 1000);
       setError(`تعداد تلاش‌ها بیش از حد مجاز. ${LOCK_SECONDS} ثانیه صبر کنید`);
     }
+    
     await new Promise((r) => setTimeout(r, 400));
     setPin("");
     setShake(false);
+    hasSubmitted.current = false;
+    setIsVerifying(false);
   }
 
   const isLocked = lockedUntil !== null && lockRemain > 0;
@@ -157,7 +175,7 @@ export default function PinPage() {
             {lockRemain} ثانیه صبر کنید
           </p>
         )}
-        {!error && !isLocked && hasPin && (
+        {!error && !isLocked && hasPin && !isVerifying && (
           <p className="text-[10px] text-[var(--muted)] text-center mb-3">
             {MAX_ATTEMPTS - attempts} تلاش باقی‌مانده
           </p>
@@ -169,7 +187,7 @@ export default function PinPage() {
               key={d}
               type="button"
               onClick={() => handleDigit(String(d))}
-              disabled={isLocked}
+              disabled={isLocked || isVerifying}
               className="h-12 rounded-xl bg-[var(--panel)] border border-[var(--border)] text-base font-bold text-[var(--text)] hover:bg-[var(--panel-2)] disabled:opacity-40 transition"
             >
               {d}
@@ -178,7 +196,7 @@ export default function PinPage() {
           <button
             type="button"
             onClick={handleBackspace}
-            disabled={isLocked}
+            disabled={isLocked || isVerifying}
             className="h-12 rounded-xl bg-[var(--panel)] border border-[var(--border)] text-sm font-bold text-red-400 hover:bg-red-500/10 disabled:opacity-40 transition"
           >
             ⌫
@@ -186,7 +204,7 @@ export default function PinPage() {
           <button
             type="button"
             onClick={() => handleDigit("0")}
-            disabled={isLocked}
+            disabled={isLocked || isVerifying}
             className="h-12 rounded-xl bg-[var(--panel)] border border-[var(--border)] text-base font-bold text-[var(--text)] hover:bg-[var(--panel-2)] disabled:opacity-40 transition"
           >
             0
@@ -194,22 +212,25 @@ export default function PinPage() {
           <button
             type="button"
             onClick={handleVerify}
-            disabled={isLocked || pin.length !== 4}
-            className="h-12 rounded-xl bg-[var(--gold)] text-black text-sm font-bold hover:bg-[var(--gold)]/90 disabled:opacity-40 transition"
+            disabled={isLocked || pin.length !== 4 || isVerifying}
+            className="h-12 rounded-xl bg-[var(--gold)] text-black text-sm font-bold hover:bg-[var(--gold)]/90 disabled:opacity-40 transition flex items-center justify-center"
           >
-            تأیید
+            {isVerifying ? (
+              <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+            ) : (
+              "تأیید"
+            )}
           </button>
         </div>
 
         {hasPin && (
-  <button
-    onClick={() => router.push("/auth/pin-recovery")}
-    className="w-full mt-4 text-[10px] text-[var(--muted)] hover:text-[var(--gold)] transition"
-  >
-    کد امن را فراموش کرده‌اید؟
-  </button>
-)}
-
+          <button
+            onClick={() => router.push("/auth/pin-recovery")}
+            className="w-full mt-4 text-[10px] text-[var(--muted)] hover:text-[var(--gold)] transition"
+          >
+            کد امن را فراموش کرده‌اید؟
+          </button>
+        )}
       </div>
       <style>{`
         @keyframes shake {
