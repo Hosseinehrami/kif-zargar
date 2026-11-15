@@ -45,18 +45,15 @@ export default function AddCardModal({
   const [showBankPicker, setShowBankPicker] = useState(false);
   const [error, setError] = useState("");
 
-  // شبا فقط ۲۴ رقم (بعد از IR)
   const shabaClean = toEnDigits(shabaDigits).replace(/\D/g, "").slice(0, 24);
   const isShabaValid = shabaClean.length === 24;
 
-  // کارت ۱۶ رقم
   const cardClean = toEnDigits(cardNumber).replace(/\D/g, "");
   const isCardValid = /^\d{16}$/.test(cardClean);
 
   const fullShaba = `IR${shabaClean}`;
   const isValid = isShabaValid && isCardValid;
 
-  // کد ملی خودکار از حساب کاربر
   const userNationalId = user?.nationalId || "";
   const hasNationalId = userNationalId.length === 10;
 
@@ -66,6 +63,18 @@ export default function AddCardModal({
       document.body.style.overflow = "";
     };
   }, []);
+
+  // Escape handler (bank picker > modal)
+  useEffect(() => {
+    if (step === "verifying" || step === "success") return;
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (showBankPicker) setShowBankPicker(false);
+      else onClose();
+    };
+    document.addEventListener("keydown", onEsc);
+    return () => document.removeEventListener("keydown", onEsc);
+  }, [step, showBankPicker, onClose]);
 
   function formatGroups(digits: string, groupSize = 4) {
     const re = new RegExp(`.{1,${groupSize}}`, "g");
@@ -95,47 +104,19 @@ export default function AddCardModal({
     setStep("verifying");
     setError("");
 
-    // ============================================================
-    // 🔗 در بک‌اند واقعی، این بخش با این کد جایگزین می‌شود:
-    //
-    // const res = await fetch("/api/verify-shaba", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     shaba: fullShaba,
-    //     nationalId: userNationalId,
-    //   }),
-    // });
-    //
-    // const data = await res.json();
-    //
-    // if (!data.success) {
-    //   setStep("error");
-    //   setError(data.error || "شبا با کد ملی شما مطابقت ندارد");
-    //   return;
-    // }
-    //
-    // در بک‌اند:
-    //   - درخواست به شناسار (shahkar.ir) با shaba + nationalId
-    //   - اگر تطبیق داشت → success: true
-    //   - اگر نداشت → success: false
-    // ============================================================
-
-    // شبیه‌سازی حالا
     await new Promise(r => setTimeout(r, 1800));
 
-    // تست خطا: شبایی که با 00 شروع شود رد می‌شود
     if (shabaClean.startsWith("00")) {
       setStep("error");
       setError("شبا وارد شده با کد ملی شما مطابقت ندارد");
       return;
     }
 
-    // موفق
     setStep("success");
     await new Promise(r => setTimeout(r, 1600));
 
     onAdd({
+      // eslint-disable-next-line react-hooks/purity -- This code path only executes from the submit button's onClick handler, never during render
       id: "card-" + Date.now(),
       bank: selectedBank.name,
       last4: cardClean.slice(-4),
@@ -159,18 +140,21 @@ export default function AddCardModal({
         <div
           className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl overflow-hidden my-4"
           onClick={e => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-card-title"
         >
           {/* هدر */}
           <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-xl bg-[var(--gold)]/10 border border-[var(--gold)]/30 flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                   <line x1="1" y1="10" x2="23" y2="10" />
                 </svg>
               </div>
               <div>
-                <div className="text-sm font-bold">
+                <div id="add-card-title" className="text-sm font-bold">
                   {step === "form" && "افزودن کارت بانکی"}
                   {step === "verifying" && "در حال استعلام"}
                   {step === "success" && "کارت اضافه شد"}
@@ -190,7 +174,7 @@ export default function AddCardModal({
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel-2)] transition"
                 aria-label="بستن"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -200,14 +184,12 @@ export default function AddCardModal({
 
           {/* بدنه */}
           <div className="p-4">
-            {/* ===== مرحله فرم ===== */}
             {step === "form" && (
               <>
-                {/* کد ملی کاربر (نمایش) */}
                 <div className="bg-[var(--panel-2)] rounded-xl p-2.5 mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
                       </svg>
@@ -220,13 +202,12 @@ export default function AddCardModal({
                     </div>
                   </div>
                   {hasNationalId && (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}
                 </div>
 
-                {/* انتخاب بانک */}
                 <label className="text-[10px] text-[var(--muted)] block mb-1.5">بانک</label>
                 <button
                   type="button"
@@ -235,12 +216,11 @@ export default function AddCardModal({
                 >
                   <span className="text-base">{selectedBank.icon}</span>
                   <span className="flex-1 text-right text-[12px] font-bold">{selectedBank.name}</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
 
-                {/* شماره شبا با IR ثابت */}
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[10px] text-[var(--muted)]">شماره شبا</label>
                   <span className="text-[9px] text-[var(--muted)] font-mono" dir="ltr">
@@ -257,7 +237,6 @@ export default function AddCardModal({
                   }`}
                   dir="ltr"
                 >
-                  {/* IR ثابت */}
                   <div className="flex items-center justify-center px-3 bg-[var(--gold)]/10 border-r border-[var(--border)]">
                     <span className="text-sm font-mono font-black text-[var(--gold)] select-none">
                       IR
@@ -269,6 +248,7 @@ export default function AddCardModal({
                     value={formatGroups(shabaClean)}
                     onChange={e => handleShabaChange(e.target.value)}
                     placeholder="0000 0000 0000 0000 0000 0000"
+                    aria-label="شماره شبا"
                     className="flex-1 min-w-0 bg-transparent text-center text-[11px] font-mono font-bold text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal outline-none py-2.5"
                     autoFocus
                   />
@@ -279,7 +259,6 @@ export default function AddCardModal({
                   </p>
                 )}
 
-                {/* شماره کارت */}
                 <label className="text-[10px] text-[var(--muted)] block mb-1.5">شماره کارت</label>
                 <div
                   className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-2.5 mb-3 transition-all ${
@@ -296,6 +275,7 @@ export default function AddCardModal({
                     value={formatGroups(cardClean)}
                     onChange={e => handleCardChange(e.target.value)}
                     placeholder="0000 0000 0000 0000"
+                    aria-label="شماره کارت"
                     className="w-full bg-transparent text-center text-sm font-mono font-bold tracking-widest text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal outline-none"
                     dir="ltr"
                   />
@@ -304,7 +284,6 @@ export default function AddCardModal({
                   <p className="text-[9.5px] text-red-400 mb-2 -mt-1.5">شماره کارت باید ۱۶ رقم باشد</p>
                 )}
 
-                {/* اطلاعات استعلام */}
                 <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/30 mb-3 flex gap-2">
                   <span className="text-sm shrink-0">ℹ️</span>
                   <div className="text-[9.5px] text-sky-400 leading-relaxed">
@@ -330,13 +309,12 @@ export default function AddCardModal({
               </>
             )}
 
-            {/* ===== مرحله استعلام ===== */}
             {step === "verifying" && (
               <div className="py-6 text-center">
                 <div className="relative inline-block mb-4">
                   <div className="absolute inset-0 bg-[var(--gold)] opacity-30 rounded-full blur-xl animate-pulse" />
                   <div className="relative w-16 h-16 rounded-full bg-[var(--gold)]/10 border-2 border-[var(--gold)]/40 flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-[var(--gold)]/30 border-t-[var(--gold)] rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-2 border-[var(--gold)]/30 border-t-[var(--gold)] rounded-full animate-spin" aria-hidden="true" />
                   </div>
                 </div>
 
@@ -345,7 +323,6 @@ export default function AddCardModal({
                   لطفاً صبر کنید، این فرآیند چند لحظه طول می‌کشد
                 </div>
 
-                {/* اطلاعات در حال بررسی */}
                 <div className="bg-[var(--panel-2)] border border-[var(--border)] rounded-xl p-3 text-right space-y-1.5 text-[10px] max-w-xs mx-auto">
                   <div className="flex justify-between">
                     <span className="text-[var(--muted)]">کد ملی</span>
@@ -361,13 +338,12 @@ export default function AddCardModal({
               </div>
             )}
 
-            {/* ===== مرحله موفقیت ===== */}
             {step === "success" && (
               <div className="py-6 text-center">
                 <div className="relative inline-block mb-3">
                   <div className="absolute inset-0 bg-emerald-500 opacity-30 rounded-full blur-xl animate-pulse" />
                   <div className="relative w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </div>
@@ -380,13 +356,12 @@ export default function AddCardModal({
               </div>
             )}
 
-            {/* ===== مرحله خطا ===== */}
             {step === "error" && (
               <div className="py-6 text-center">
                 <div className="relative inline-block mb-3">
                   <div className="absolute inset-0 bg-red-500 opacity-30 rounded-full blur-xl animate-pulse" />
                   <div className="relative w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
@@ -417,7 +392,6 @@ export default function AddCardModal({
         </div>
       </div>
 
-      {/* مودال انتخاب بانک */}
       {showBankPicker && (
         <div
           className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
@@ -426,16 +400,19 @@ export default function AddCardModal({
           <div
             className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 max-h-[80vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bank-picker-title"
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-sm">انتخاب بانک</h3>
+              <h3 id="bank-picker-title" className="font-bold text-sm">انتخاب بانک</h3>
               <button
                 type="button"
                 onClick={() => setShowBankPicker(false)}
                 className="text-[var(--muted)]"
                 aria-label="بستن"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -460,7 +437,7 @@ export default function AddCardModal({
                   <span className="flex-1 text-[11px] font-bold">{b.name}</span>
                   {selectedBank.id === b.id && (
                     <span className="w-5 h-5 rounded-full bg-[var(--gold)] flex items-center justify-center">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </span>

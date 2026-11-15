@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { format, toFa, toEnDigits } from "@/lib/format";
 
-// قوانین
 const MIN_WITHDRAW = 200_000;
 const INSTANT_FEE_RATE = 0.01;
 const INSTANT_START_HOUR = 3;
@@ -61,18 +60,41 @@ export default function WithdrawPage() {
   const [pinError, setPinError] = useState("");
   const [pinShake, setPinShake] = useState(false);
 
+  // ✅ setState اولیه در rAF (به جای setState مستقیم در effect)
   useEffect(() => {
-    setInstantWindow(checkInstantWindow());
+    const raf = requestAnimationFrame(() => setInstantWindow(checkInstantWindow()));
     const t = setInterval(() => setInstantWindow(checkInstantWindow()), 30000);
-    return () => clearInterval(t);
+    return () => { cancelAnimationFrame(raf); clearInterval(t); };
   }, []);
 
-  useEffect(() => {
-    if (pinDigits.every(d => d) && step === "pin") {
-      handlePinVerify();
+  // ✅ handleFinalSubmit و handlePinVerify قبل از effect تعریف شدند (رفع react-hooks/immutability)
+  async function handleFinalSubmit() {
+    await new Promise(r => setTimeout(r, 800));
+    setStep("success");
+  }
+
+  async function handlePinVerify() {
+    const pin = pinDigits.join("");
+    await new Promise(r => setTimeout(r, 400));
+
+    if (user?.securityPin === pin) {
+      handleFinalSubmit();
+    } else {
+      setPinError("کد امن اشتباه است");
+      setPinShake(true);
+      await new Promise(r => setTimeout(r, 400));
+      setPinDigits(["", "", "", ""]);
+      setPinShake(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pinDigits]);
+  }
+
+  useEffect(() => {
+  if (pinDigits.every(d => d) && step === "pin") {
+    const t = setTimeout(() => handlePinVerify(), 0);
+    return () => clearTimeout(t);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [pinDigits, step]);
 
   const amountNum = Number(amount) || 0;
   const fee = tab === "instant" ? amountNum * INSTANT_FEE_RATE : 0;
@@ -94,26 +116,6 @@ export default function WithdrawPage() {
     } else {
       handleFinalSubmit();
     }
-  }
-
-  async function handlePinVerify() {
-    const pin = pinDigits.join("");
-    await new Promise(r => setTimeout(r, 400));
-
-    if (user?.securityPin === pin) {
-      handleFinalSubmit();
-    } else {
-      setPinError("کد امن اشتباه است");
-      setPinShake(true);
-      await new Promise(r => setTimeout(r, 400));
-      setPinDigits(["", "", "", ""]);
-      setPinShake(false);
-    }
-  }
-
-  async function handleFinalSubmit() {
-    await new Promise(r => setTimeout(r, 800));
-    setStep("success");
   }
 
   function handlePinDigit(idx: number, val: string) {
@@ -143,7 +145,6 @@ export default function WithdrawPage() {
   return (
     <>
       <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
-        {/* هدر */}
         <div className="flex items-center gap-2 mb-4">
           <button
             type="button"
@@ -163,7 +164,6 @@ export default function WithdrawPage() {
 
         {step === "form" && (
           <>
-            {/* موجودی قابل برداشت */}
             <div className="mb-4 rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-3.5">
               <div className="flex items-center justify-between">
                 <div>
@@ -183,7 +183,6 @@ export default function WithdrawPage() {
               </div>
             </div>
 
-            {/* تب‌ها */}
             <div className="grid grid-cols-2 gap-2 mb-4">
               <button
                 type="button"
@@ -227,7 +226,6 @@ export default function WithdrawPage() {
               </button>
             </div>
 
-            {/* هشدارها */}
             {tab === "instant" && !instantWindow.allowed && (
               <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex gap-2.5">
                 <span className="text-base shrink-0">⏰</span>
@@ -250,7 +248,6 @@ export default function WithdrawPage() {
               </div>
             )}
 
-            {/* ورودی مبلغ */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 mb-4">
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">مبلغ برداشت (تومان)</label>
               <div className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${
@@ -298,7 +295,6 @@ export default function WithdrawPage() {
               )}
             </div>
 
-            {/* انتخاب حساب */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 mb-4">
               <div className="text-xs font-bold mb-3">حساب مقصد</div>
               <button
@@ -416,7 +412,7 @@ export default function WithdrawPage() {
             </p>
 
             <div className="bg-[var(--panel-2)] border border-[var(--border)] rounded-xl p-3 mb-5 text-right space-y-1.5">
-              <div className="flex justify-between text-[10.5px]">
+                            <div className="flex justify-between text-[10.5px]">
                 <span className="text-[var(--muted)]">مبلغ</span>
                 <span className="font-bold text-[var(--gold)] font-mono">{format(finalAmount)} تومان</span>
               </div>

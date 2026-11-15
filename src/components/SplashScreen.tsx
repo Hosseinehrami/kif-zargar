@@ -3,13 +3,11 @@
 import { useEffect, useState } from "react";
 
 // ============ تنظیم زمان‌ها (میلی‌ثانیه) ============
-// اگر می‌خواهی طولانی‌تر یا کوتاه‌تر شود، فقط این ۳ عدد را عوض کن
-const BREAKOUT_AT = 2500;   // لحظه شکستن سقف
-const FADE_START  = 3300;   // شروع محو شدن
-const UNMOUNT_AT  = 4000;   // حذف کامل از DOM
+const BREAKOUT_AT = 2500;
+const FADE_START  = 3300;
+const UNMOUNT_AT  = 4000;
 // ====================================================
 
-// کندل‌های قرمز (نزولی) — از بالا می‌ریزند
 const RED_CANDLES = [
   { x: 15,  openY: 35, closeY: 45, highY: 30, lowY: 50, delay: 400 },
   { x: 35,  openY: 42, closeY: 54, highY: 37, lowY: 60, delay: 520 },
@@ -17,7 +15,6 @@ const RED_CANDLES = [
   { x: 75,  openY: 60, closeY: 72, highY: 55, lowY: 78, delay: 760 },
 ];
 
-// کندل‌های سبز (صعودی) — از پایین شوت می‌کنند
 const GREEN_CANDLES = [
   { x: 95,  openY: 70, closeY: 58, highY: 52, lowY: 75, delay: 1100 },
   { x: 115, openY: 58, closeY: 44, highY: 38, lowY: 63, delay: 1280 },
@@ -25,7 +22,6 @@ const GREEN_CANDLES = [
   { x: 155, openY: 28, closeY: 12, highY: 6,  lowY: 34, delay: 1640 },
 ];
 
-// ذرات پس‌زمینه
 const PARTICLES = [
   { left: 8,  top: 15, size: 2,   delay: 0,   duration: 4   },
   { left: 22, top: 60, size: 1,   delay: 0.5, duration: 5   },
@@ -55,7 +51,7 @@ export default function SplashScreen() {
 
     if (!shouldShow) return;
 
-    setVisible(true);
+    const raf = requestAnimationFrame(() => setVisible(true));
 
     const t1 = setTimeout(() => setPhase("breakout"), BREAKOUT_AT);
     const t2 = setTimeout(() => setPhase("out"), FADE_START);
@@ -65,6 +61,7 @@ export default function SplashScreen() {
     }, UNMOUNT_AT);
 
     return () => {
+      cancelAnimationFrame(raf);
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
@@ -82,12 +79,10 @@ export default function SplashScreen() {
       }`}
       aria-hidden="true"
     >
-      {/* هاله طلایی */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-[500px] h-[500px] rounded-full bg-[#c4a875] opacity-[0.08] blur-[110px]" />
       </div>
 
-      {/* ذرات */}
       <div className="absolute inset-0 pointer-events-none">
         {PARTICLES.map((p, i) => (
           <div
@@ -106,9 +101,7 @@ export default function SplashScreen() {
         ))}
       </div>
 
-      {/* محتوا */}
       <div className="relative flex flex-col items-center px-4">
-        {/* لوگو */}
         <div style={{ animation: "scaleIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both" }}>
           <div className="relative w-20 h-20 rounded-3xl border-2 border-[#c4a875]/40 bg-gradient-to-br from-[#c4a875]/25 to-[#c4a875]/5 flex items-center justify-center text-3xl font-black text-[#c4a875] shadow-2xl shadow-[#c4a875]/25 overflow-hidden">
             ک
@@ -119,7 +112,6 @@ export default function SplashScreen() {
           </div>
         </div>
 
-        {/* برند */}
         <div
           className="mt-5 text-xl font-black text-[#c4a875] font-serif italic tracking-[0.2em]"
           style={{ animation: "slideUp 0.6s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both" }}
@@ -133,10 +125,8 @@ export default function SplashScreen() {
           پلتفرم هوشمند طلا
         </div>
 
-        {/* نمودار */}
         <div className="mt-8" style={{ animation: "fadeIn 0.5s 0.4s both" }}>
           <svg viewBox="0 0 180 90" className="w-[200px] h-[100px] overflow-visible">
-            {/* خط سقف */}
             <line
               x1="5" y1="15" x2="175" y2="15"
               stroke={isBreakout ? "#10b981" : "#3a3a3a"}
@@ -148,7 +138,6 @@ export default function SplashScreen() {
               }}
             />
 
-            {/* کندل‌های قرمز */}
             {RED_CANDLES.map((c, i) => (
               <g
                 key={`r${i}`}
@@ -169,7 +158,6 @@ export default function SplashScreen() {
               </g>
             ))}
 
-            {/* کندل‌های سبز */}
             {GREEN_CANDLES.map((c, i) => (
               <g
                 key={`g${i}`}
@@ -190,7 +178,6 @@ export default function SplashScreen() {
               </g>
             ))}
 
-            {/* جرقه شکست */}
             {isBreakout && (
               <g style={{ transformOrigin: "155px 15px" }}>
                 <circle cx="155" cy="15" r="5" fill="#10b981" style={{ animation: "burst 1s ease-out both" }} />
@@ -203,14 +190,13 @@ export default function SplashScreen() {
           </svg>
         </div>
 
-        {/* درصد */}
         <div className="h-6 mt-1 flex items-center justify-center">
           {isBreakout && (
             <div
               className="text-sm font-black text-emerald-400 flex items-center gap-1"
               style={{ animation: "fadeUp 0.5s ease-out both" }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                 <polyline points="17 6 23 6 23 12" />
               </svg>
@@ -219,7 +205,6 @@ export default function SplashScreen() {
           )}
         </div>
 
-        {/* نوار پیشرفت */}
         <div
           className="mt-4 w-44 h-[2px] rounded-full bg-white/[0.06] overflow-hidden"
           style={{ animation: "fadeIn 0.5s 0.5s both" }}
@@ -236,7 +221,6 @@ export default function SplashScreen() {
           />
         </div>
 
-        {/* متن */}
         <div
           className="mt-3 text-[10px] text-gray-500 flex items-center gap-1.5"
           style={{ animation: "fadeIn 0.5s 0.6s both" }}
@@ -256,7 +240,6 @@ export default function SplashScreen() {
         </div>
       </div>
 
-      {/* انیمیشن‌ها */}
       <style>{`
         @keyframes floatParticle {
           0%, 100% { transform: translateY(0) translateX(0); opacity: 0.35; }

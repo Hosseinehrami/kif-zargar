@@ -25,14 +25,17 @@ export default function DeleteCardModal({
     return () => { document.body.style.overflow = ""; };
   }, []);
 
+  // Escape to close (disabled while loading)
   useEffect(() => {
-    if (otpDigits.every(d => d)) {
-      const t = setTimeout(() => verifyOtp(), 400);
-      return () => clearTimeout(t);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [otpDigits]);
+    if (loading) return;
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onEsc);
+    return () => document.removeEventListener("keydown", onEsc);
+  }, [loading, onClose]);
 
+  // ✅ تابع قبل از effect تعریف شد تا خطای react-hooks/immutability رفع شود
   async function verifyOtp() {
     const code = otpDigits.join("");
     if (code.length !== 4) return;
@@ -52,6 +55,14 @@ export default function DeleteCardModal({
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (otpDigits.every(d => d)) {
+      const t = setTimeout(() => verifyOtp(), 400);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otpDigits]);
 
   function handleOtpDigit(idx: number, val: string) {
     const en = toEnDigits(val).replace(/\D/g, "");
@@ -80,30 +91,32 @@ export default function DeleteCardModal({
   return (
     <div
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
-      onClick={onClose}
+      onClick={loading ? undefined : onClose}
     >
       <div
         className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--panel)] overflow-hidden"
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-card-title"
       >
         <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                 <path d="M10 11v6M14 11v6" />
               </svg>
             </div>
             <div>
-              <div className="text-sm font-bold text-red-400">حذف کارت</div>
+              <div id="delete-card-title" className="text-sm font-bold text-red-400">حذف کارت</div>
               <div className="text-[10px] text-[var(--muted)] mt-0.5">این عمل قابل بازگشت نیست</div>
             </div>
           </div>
         </div>
 
         <div className="p-4">
-          {/* کارت مورد حذف */}
           <div className="bg-[var(--panel-2)] border border-[var(--border)] rounded-xl p-3 mb-3">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center text-base shrink-0">
@@ -135,6 +148,7 @@ export default function DeleteCardModal({
                 onKeyDown={e => handleOtpBackspace(i, e)}
                 disabled={loading}
                 autoFocus={i === 0}
+                aria-label={`رقم ${i + 1} کد تایید`}
                 className={`w-12 h-14 text-center text-xl font-black rounded-xl border-2 outline-none transition-all ${
                   error ? "border-red-500 text-red-400" :
                   d ? "border-red-500 text-red-400 bg-red-500/10" :
@@ -147,7 +161,7 @@ export default function DeleteCardModal({
           {error && <p className="text-[10px] text-red-400 text-center mb-2">{error}</p>}
           {loading && !error && (
             <p className="text-[10px] text-red-400 text-center mb-2 flex items-center justify-center gap-2">
-              <span className="w-3 h-3 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+              <span className="w-3 h-3 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" aria-hidden="true" />
               در حال حذف...
             </p>
           )}
@@ -160,7 +174,7 @@ export default function DeleteCardModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="w-full h-9 mt-3 rounded-xl bg-transparent text-[var(--muted)] font-bold text-[11px] hover:text-[var(--text)] transition"
+            className="w-full h-9 mt-3 rounded-xl bg-transparent text-[var(--muted)] font-bold text-[11px] hover:text-[var(--text)] transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             انصراف
           </button>

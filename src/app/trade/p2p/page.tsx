@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { format, toFa, toEnDigits } from "@/lib/format";
 import { SETTINGS } from "@/lib/settings";
 import { useToast } from "@/components/ui/Toast";
@@ -34,8 +33,75 @@ const generateP2POrderBook = (basePrice: number) => {
   return { asks, bids };
 };
 
+// ==========================================
+// TradeSummary — استخراج شده به بیرون از کامپوننت اصلی
+// (قبلاً داخل render تعریف می‌شد و در هر re-render از نو mount می‌شد)
+// ==========================================
+function TradeSummary({
+  side,
+  amountNum,
+  priceNum,
+  totalToman,
+  feeToman,
+  feeGold,
+}: {
+  side: Side;
+  amountNum: number;
+  priceNum: number;
+  totalToman: number;
+  feeToman: number;
+  feeGold: number;
+}) {
+  if (amountNum <= 0) return null;
+  const isBuy = side === "buy";
+
+  return (
+    <div className={`rounded-lg border p-2.5 text-[10.5px] space-y-1.5 h-fit shadow-sm transition-all duration-300 mb-2 ${
+      isBuy
+        ? "border-[var(--green)]/30 bg-[var(--green)]/5"
+        : "border-[var(--red)]/30 bg-[var(--red)]/5"
+    }`}>
+      <div className="flex justify-between items-center border-b border-[var(--border)] pb-1.5 mb-1">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-[11px] text-[var(--text)]">خلاصه معامله</span>
+          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border shadow-sm ${
+            isBuy
+              ? "bg-[var(--green)] text-white border-[var(--green)]"
+              : "bg-[var(--red)] text-white border-[var(--red)]"
+          }`}>
+            {isBuy ? "خرید" : "فروش"}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-[var(--muted)]">مقدار طلا</span>
+        <span className="font-bold text-[11px] font-mono">{toFa(amountNum.toFixed(3))} گرم</span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-[var(--muted)]">قیمت هر گرم</span>
+        <span className="font-bold text-[var(--text)] font-mono">{format(priceNum)} ت</span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-[var(--muted)]">کارمزد پلتفرم (۰.۱٪)</span>
+        <span className="font-bold text-amber-400 font-mono">
+          {isBuy ? `${format(feeToman)} ت` : `${toFa(feeGold.toFixed(4))} گرم`}
+        </span>
+      </div>
+
+      <div className="flex justify-between items-center pt-1.5 border-t border-[var(--border)] mt-0.5">
+        <span className="text-[var(--muted)] font-bold">مبلغ کل (تومان)</span>
+        <span className={`font-black text-[12px] px-1.5 py-0.5 rounded font-mono ${
+          isBuy ? "text-[var(--red)] bg-[var(--red)]/10" : "text-[var(--green)] bg-[var(--green)]/10"
+        }`}>{format(totalToman)} ت</span>
+      </div>
+    </div>
+  );
+}
+
 export default function P2PTradingPage() {
-  const router = useRouter();
   const marketPrice = SETTINGS.fees.goldPrice;
   const toast = useToast();
 
@@ -47,12 +113,21 @@ export default function P2PTradingPage() {
   const [isSelectedFromBook, setIsSelectedFromBook] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
+  // ✅ setShowGuide داخل requestAnimationFrame تا خطای set-state-in-effect رفع شود
   useEffect(() => {
-    const hasSeen = localStorage.getItem("p2p-guide-seen");
-    if (!hasSeen) {
-      setShowGuide(true);
-      localStorage.setItem("p2p-guide-seen", "true");
-    }
+    let shouldShow = false;
+    try {
+      const hasSeen = localStorage.getItem("p2p-guide-seen");
+      if (!hasSeen) {
+        shouldShow = true;
+        localStorage.setItem("p2p-guide-seen", "true");
+      }
+    } catch {}
+
+    if (!shouldShow) return;
+
+    const raf = requestAnimationFrame(() => setShowGuide(true));
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   const userGoldBalance = 12.45;
@@ -103,56 +178,6 @@ export default function P2PTradingPage() {
     }, 800);
   }
 
-  const TradeSummary = () => {
-    if (amountNum <= 0) return null;
-    const isBuy = side === "buy";
-
-    return (
-      <div className={`rounded-lg border p-2.5 text-[10.5px] space-y-1.5 h-fit shadow-sm transition-all duration-300 mb-2 ${
-        isBuy
-          ? "border-[var(--green)]/30 bg-[var(--green)]/5"
-          : "border-[var(--red)]/30 bg-[var(--red)]/5"
-      }`}>
-        <div className="flex justify-between items-center border-b border-[var(--border)] pb-1.5 mb-1">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[11px] text-[var(--text)]">خلاصه معامله</span>
-            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border shadow-sm ${
-              isBuy
-                ? "bg-[var(--green)] text-white border-[var(--green)]"
-                : "bg-[var(--red)] text-white border-[var(--red)]"
-            }`}>
-              {isBuy ? "خرید" : "فروش"}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">مقدار طلا</span>
-          <span className="font-bold text-[11px] font-mono">{toFa(amountNum.toFixed(3))} گرم</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">قیمت هر گرم</span>
-          <span className="font-bold text-[var(--text)] font-mono">{format(priceNum)} ت</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">کارمزد پلتفرم (۰.۱٪)</span>
-          <span className="font-bold text-amber-400 font-mono">
-            {isBuy ? `${format(feeToman)} ت` : `${toFa(feeGold.toFixed(4))} گرم`}
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center pt-1.5 border-t border-[var(--border)] mt-0.5">
-          <span className="text-[var(--muted)] font-bold">مبلغ کل (تومان)</span>
-          <span className={`font-black text-[12px] px-1.5 py-0.5 rounded font-mono ${
-            isBuy ? "text-[var(--red)] bg-[var(--red)]/10" : "text-[var(--green)] bg-[var(--green)]/10"
-          }`}>{format(totalToman)} ت</span>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="h-[calc(100dvh-130px)] flex flex-col bg-[var(--bg)] text-[var(--text)] font-sans" dir="rtl">
 
@@ -184,7 +209,7 @@ export default function P2PTradingPage() {
           </div>
 
           <div className="flex-1 flex flex-col justify-end">
-            {orderBook.asks.map((ask, i) => (
+            {orderBook.asks.map((ask) => (
               <div key={ask.id} onClick={() => { setSide("buy"); handleSelectOffer(ask.price); }} className="relative grid grid-cols-2 px-2 py-[4px] text-[9.5px] cursor-pointer hover:bg-white/5 transition border-b border-[var(--border)]/30 last:border-0">
                 <div className="absolute inset-y-0 right-0 bg-[var(--red)]/10" style={{ width: `${(ask.amount / 25) * 100}%` }} />
                 <span className="text-[var(--red)] text-right z-10 font-mono">{format(ask.price)}</span>
@@ -199,7 +224,7 @@ export default function P2PTradingPage() {
           </div>
 
           <div className="flex-1 flex flex-col">
-            {orderBook.bids.map((bid, i) => (
+            {orderBook.bids.map((bid) => (
               <div key={bid.id} onClick={() => { setSide("sell"); handleSelectOffer(bid.price); }} className="relative grid grid-cols-2 px-2 py-[4px] text-[9.5px] cursor-pointer hover:bg-white/5 transition border-b border-[var(--border)]/30 last:border-0">
                 <div className="absolute inset-y-0 right-0 bg-[var(--green)]/10" style={{ width: `${(bid.amount / 25) * 100}%` }} />
                 <span className="text-[var(--green)] text-right z-10 font-mono">{format(bid.price)}</span>
@@ -296,7 +321,14 @@ export default function P2PTradingPage() {
             <p className="text-[8.5px] text-[var(--red)] mb-1">موجودی کیف پول شما کافی نیست یا مقدار کمتر از حد مجاز است.</p>
           )}
 
-          <TradeSummary />
+          <TradeSummary
+            side={side}
+            amountNum={amountNum}
+            priceNum={priceNum}
+            totalToman={totalToman}
+            feeToman={feeToman}
+            feeGold={feeGold}
+          />
 
           <button onClick={handleSubmit} disabled={!isValid || isSubmitting} className={`w-full h-8 rounded text-[10px] font-bold text-white transition ${side === "buy" ? "bg-[var(--green)] hover:bg-[var(--green)]/90" : "bg-[var(--red)] hover:bg-[var(--red)]/90"} disabled:opacity-50`}>
             {isSubmitting ? "در حال ثبت..." : `ثبت درخواست ${side === "buy" ? "خرید" : "فروش"}`}

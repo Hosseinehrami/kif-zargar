@@ -6,7 +6,6 @@ import { SETTINGS } from "@/lib/settings";
 
 const VAT_RATE = 0.09;
 
-// ---------- Types ----------
 type Review = { user: string; rating: number; date: string; text: string; verified?: boolean };
 type Product = {
   id: string; title: string; category: string;
@@ -25,7 +24,6 @@ const CATEGORIES = ["همه", "شمش و سکه", "انگشتر", "گردنبن�
 const ALL_CITIES = ["همه شهرها", "تهران", "مشهد", "اصفهان", "شیراز", "تبریز", "کرج", "یزد", "رشت"];
 const NOW_BASE = Date.now();
 
-// ---------- Mock Data ----------
 const PRODUCTS: Product[] = [
   { 
     id: "p1", title: "سکه امامی طرح جدید (۱۴۰۳)", category: "شمش و سکه", 
@@ -99,7 +97,6 @@ const PRODUCTS: Product[] = [
   },
 ];
 
-// ---------- Icons ----------
 const SearchIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
 const StarIcon = ({ fill = "currentColor", size = 12 }: { fill?: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1">
@@ -118,7 +115,6 @@ const EyeIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none
 const PlusIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 const MinusIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 
-// ---------- Helpers ----------
 const TrustBadges = () => (
   <div className="flex flex-wrap gap-2 mt-3 mb-1">
     {[{ icon: "✅", text: "تضمین اصالت" }, { icon: "🔄", text: "۷ روز بازگشت" }, { icon: "🚚", text: "ارسال بیمه‌شده" }, { icon: "💳", text: "پرداخت امن" }].map((b, i) => (
@@ -156,8 +152,9 @@ async function shareProduct(p: Product) {
   return false;
 }
 
-// ---------- Countdown Timer ----------
 function CountdownTimer({ endsAt }: { endsAt: number }) {
+  // ✅ eslint-disable justified: initial countdown reference time; evaluated once at mount, client-only
+  // eslint-disable-next-line react-hooks/purity
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -182,7 +179,6 @@ function CountdownTimer({ endsAt }: { endsAt: number }) {
   );
 }
 
-// ---------- Skeleton ----------
 function SkeletonCard() {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] overflow-hidden animate-pulse">
@@ -200,7 +196,6 @@ function SkeletonCard() {
   );
 }
 
-// ---------- Seller Profile Modal ----------
 function SellerProfileModal({ product, onClose, onViewAll }: { product: Product; onClose: () => void; onViewAll: (seller: string) => void }) {
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
@@ -233,7 +228,6 @@ function SellerProfileModal({ product, onClose, onViewAll }: { product: Product;
   );
 }
 
-// ---------- Cart Drawer ----------
 function CartDrawer({ 
   items, onClose, onQtyChange, onRemove, onCheckout 
 }: {
@@ -307,7 +301,6 @@ function CartDrawer({
   );
 }
 
-// ---------- Compare Modal ----------
 function CompareModal({ products, onClose, onRemove }: { products: Product[]; onClose: () => void; onRemove: (id: string) => void }) {
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
   const rows = [
@@ -361,7 +354,6 @@ function CompareModal({ products, onClose, onRemove }: { products: Product[]; on
   );
 }
 
-// ---------- Product Modal ----------
 function ProductModal({ 
   product, onClose, onSelectCity, onSelectProduct, onFilterBySeller, onAddToCart, showToast
 }: { 
@@ -381,7 +373,7 @@ function ProductModal({
   const isLow = product.stock > 0 && product.stock <= 3;
 
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
-  useEffect(() => { setQuantity(1); setActiveImg(product.images[0]); }, [product.id]);
+  // ✅ حذف شد: قبلاً setQuantity/setActiveImg در effect بود. حالا با `key` روی ProductModal در والد، ریست خودکار انجام می‌شود.
 
   return (
     <>
@@ -389,7 +381,6 @@ function ProductModal({
         <div className="relative w-full max-w-3xl rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
           <button onClick={onClose} className="absolute top-3 right-3 z-20 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition backdrop-blur-md"><CloseIcon /></button>
           
-          {/* Gallery */}
           <div className={`md:w-2/5 h-64 md:h-auto bg-gradient-to-br ${product.color} flex flex-col items-center justify-center relative shrink-0 p-4`}>
             <span className="text-8xl md:text-9xl drop-shadow-2xl mb-4">{activeImg}</span>
             <div className="flex gap-2">
@@ -404,7 +395,6 @@ function ProductModal({
             )}
           </div>
 
-          {/* Info */}
           <div className="p-5 md:p-6 flex-1 flex flex-col overflow-y-auto">
             <div className="flex items-start justify-between gap-2 mb-2">
               <h2 className="text-lg font-bold text-[var(--text)] flex-1">{product.title}</h2>
@@ -467,7 +457,6 @@ function ProductModal({
               </div>
             </div>
 
-            {/* Invoice */}
             <div className="bg-[var(--panel-2)] rounded-xl p-3 border border-[var(--border)] mt-auto">
               <div className="flex justify-between items-center mb-2 border-b border-[var(--border)] pb-2">
                 <span className="text-xs font-bold">تعداد سفارش:</span>
@@ -511,7 +500,6 @@ function ProductModal({
               )}
             </div>
 
-            {/* Reviews */}
             <div className="mt-5 border-t border-[var(--border)] pt-4">
               <div className="flex items-start gap-3 bg-[var(--panel-2)] border border-[var(--border)] rounded-xl p-3.5">
                 <div className="text-2xl shrink-0">🔒</div>
@@ -569,7 +557,6 @@ function ProductModal({
   );
 }
 
-// ---------- Product Card ----------
 function ProductCard({
   product: p, isFav, inCompare, compareFull, onFavToggle, onCompareToggle, onOpen
 }: { product: Product; isFav: boolean; inCompare: boolean; compareFull: boolean; onFavToggle: (e: React.MouseEvent, id: string) => void; onCompareToggle: (e: React.MouseEvent, id: string) => void; onOpen: () => void; }) {
@@ -621,7 +608,6 @@ function ProductCard({
   );
 }
 
-// ---------- Main Page ----------
 export default function MarketPage() {
   const [activeCategory, setActiveCategory] = useState("همه");
   const [searchQuery, setSearchQuery] = useState("");
@@ -644,21 +630,23 @@ export default function MarketPage() {
   const [compareList, setCompareList] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  // ✅ loading دیگر state نیست، derive می‌شود
+  const [loadedCategory, setLoadedCategory] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  // ✅ به جای setLoading(true)/false در effect، فقط loadedCategory را با تأخیر آپدیت می‌کنیم
   useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => setLoading(false), 400);
+    const t = setTimeout(() => setLoadedCategory(activeCategory), 400);
     return () => clearTimeout(t);
   }, [activeCategory]);
+
+  const loading = loadedCategory !== activeCategory;
 
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   }
 
-  // Cart
   const addToCart = (id: string, qty: number) => {
     const p = PRODUCTS.find(x => x.id === id);
     if (!p) return;
@@ -669,7 +657,6 @@ export default function MarketPage() {
   const cartItems = Object.entries(cart).map(([id, qty]) => ({ product: PRODUCTS.find(p => p.id === id)!, qty })).filter(x => x.product);
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
 
-  // Compare
   const toggleCompare = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setCompareList(prev => {
@@ -690,7 +677,8 @@ export default function MarketPage() {
   }
 
   const filteredProducts = useMemo(() => {
-    let result = PRODUCTS.filter((p) => {
+    // ✅ const به جای let
+    const result = PRODUCTS.filter((p) => {
       const matchCategory = activeCategory === "همه" || p.category === activeCategory;
       const matchSearch = p.title.includes(searchQuery) || p.seller.includes(searchQuery);
       const matchCity = selectedCity === "همه شهرها" || p.cities.includes(selectedCity) || p.cities.includes("سراسر کشور");
@@ -723,7 +711,6 @@ export default function MarketPage() {
   return (
     <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
       
-      {/* Header */}
       <div className="flex flex-col gap-3 mb-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h1 className="font-bold text-lg sm:text-xl text-[var(--text)]">بازار طلا و جواهر</h1>
@@ -774,14 +761,12 @@ export default function MarketPage() {
         )}
       </div>
 
-      {/* Categories */}
       <div className="flex overflow-x-auto gap-2 pb-3 mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {CATEGORIES.map((cat) => (
           <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${activeCategory === cat ? "bg-[var(--gold)] text-black border-[var(--gold)] shadow-[0_0_10px_rgba(196,168,117,0.3)]" : "bg-[var(--panel)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--gold)]/50"}`}>{cat}</button>
         ))}
       </div>
 
-      {/* Empty / Skeleton / Grid */}
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -828,7 +813,6 @@ export default function MarketPage() {
         </>
       )}
 
-      {/* Recently Viewed */}
       {recentlyViewedProducts.length > 0 && (
         <section className="mt-8">
           <h2 className="font-bold text-sm mb-3 flex items-center gap-2 text-[var(--text)]">
@@ -848,7 +832,6 @@ export default function MarketPage() {
         </section>
       )}
 
-      {/* Filter Drawer */}
       {showFilters && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-start" onClick={() => setShowFilters(false)}>
           <div className="w-72 h-full bg-[var(--panel)] border-l border-[var(--border)] p-5 flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -882,9 +865,9 @@ export default function MarketPage() {
         </div>
       )}
 
-      {/* Product Modal */}
       {selectedProduct && (
         <ProductModal 
+          key={selectedProduct.id}  // ✅ remount هنگام تغییر محصول (جایگزین effect ریست)
           product={selectedProduct} 
           onClose={() => setSelectedProduct(null)} 
           onSelectCity={(city) => { setSelectedCity(city); setSellerFilter(""); }} 
@@ -895,15 +878,12 @@ export default function MarketPage() {
         />
       )}
 
-      {/* Cart Drawer */}
       {cartOpen && <CartDrawer items={cartItems} onClose={() => setCartOpen(false)} onQtyChange={updateCartQty} onRemove={removeFromCart} onCheckout={() => { showToast("در حال انتقال به پرداخت..."); setCartOpen(false); }} />}
 
-      {/* Compare Modal */}
       {compareOpen && compareProducts.length > 0 && (
         <CompareModal products={compareProducts} onClose={() => setCompareOpen(false)} onRemove={(id) => setCompareList(prev => prev.filter(x => x !== id))} />
       )}
 
-      {/* Compare floating bar */}
       {compareProducts.length > 0 && !compareOpen && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-[var(--panel)] border border-[var(--gold)]/40 rounded-full shadow-2xl px-3 py-2 flex items-center gap-2">
           <span className="text-xs font-bold text-[var(--gold)] font-mono">{format(compareProducts.length)} محصول</span>
@@ -912,7 +892,6 @@ export default function MarketPage() {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[70] bg-[var(--gold)] text-black text-xs font-bold px-4 py-2.5 rounded-xl shadow-2xl">
           {toast}

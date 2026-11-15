@@ -85,7 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem(EXPIRED_FLAG, "1");
           localStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem(UNLOCK_KEY);
-        } else {
+                } else {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time auth init from localStorage on mount; runs after hydration
           setUser(parsed);
           if (!parsed.securityPin) sessionStorage.setItem(UNLOCK_KEY, "1");
         }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { COMPANY_INFO } from "@/lib/company-info";
 
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
 const toFa = (s: string) =>
   s.replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[+d]).replace(/\./g, "٫");
 
@@ -362,7 +361,7 @@ ${transfer.note ? `توضیحات: ${transfer.note}\n` : ""}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 h-9 rounded-xl bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] font-bold text-[11px] hover:bg-[var(--panel)] transition"
+            className="flex-1 h-9 rounded-xl border border-[var(--border)] bg-[var(--panel-2)] text-[var(--text)] font-bold text-[11px] hover:bg-[var(--panel)] transition"
           >
             بستن
           </button>

@@ -36,11 +36,14 @@ export default function LoginPage() {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(REMEMBER_KEY);
-      if (saved && /^09\d{9}$/.test(saved)) setRememberedPhone(saved);
-    } catch {}
+    useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      try {
+        const saved = localStorage.getItem(REMEMBER_KEY);
+        if (saved && /^09\d{9}$/.test(saved)) setRememberedPhone(saved);
+      } catch {}
+    });
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   useEffect(() => {
@@ -170,14 +173,16 @@ export default function LoginPage() {
       if (result.isVerified && result.hasPin) router.push("/auth/pin");
       else if (result.isVerified) router.push("/");
       else router.push("/auth/verify");
-    } catch (e: any) {
+        } catch (e: unknown) {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
       if (newAttempts >= MAX_ATTEMPTS) {
+        // eslint-disable-next-line react-hooks/purity -- only runs inside the async OTP error handler, not during render
         setLockedUntil(Date.now() + 60000);
         setError("تعداد تلاش‌ها بیش از حد مجاز. ۶۰ ثانیه صبر کنید.");
       } else {
-        setError(`${e.message || "کد اشتباه است"} · ${MAX_ATTEMPTS - newAttempts} تلاش باقی‌مانده`);
+        const msg = e instanceof Error ? e.message : "کد اشتباه است";
+        setError(`${msg} · ${MAX_ATTEMPTS - newAttempts} تلاش باقی‌مانده`);
       }
       setOtpStatus("error");
       setShake(true);

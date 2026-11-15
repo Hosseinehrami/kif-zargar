@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { toFa } from "@/lib/format";
 
 type ModalType = "set" | "change" | "remove" | null;
 
 export default function SettingsPage() {
-  const router = useRouter();
   const { user, hasPin, setPin, changePin, removePin } = useAuth();
   const [modal, setModal] = useState<ModalType>(null);
 
@@ -120,8 +118,8 @@ function SetPinModal({ onClose, onSave }: { onClose: () => void; onSave: (pin: s
     try {
       await onSave(pin);
       onClose();
-    } catch (e: any) {
-      setError(e.message || "خطا در ذخیره");
+        } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "خطا در ذخیره");
       setSaving(false);
     }
   }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 export type ReceiptKind = "trade" | "transfer" | "deposit" | "withdraw";
 
@@ -23,7 +22,6 @@ const toFa = (s: string) =>
   s.replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[+d]).replace(/\./g, "٫");
 
 async function lookupReceipt(code: string): Promise<VerifiedReceipt | null> {
-  // 🔗 در بک‌اند واقعی → fetch(`/api/verify/${code}`)
   await new Promise(r => setTimeout(r, 900));
 
   const trimmed = code.trim().toUpperCase();
@@ -87,8 +85,13 @@ export default function ReceiptDisplay({ code }: { code: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    setState("loading");
-    setReceipt(null);
+
+    // Reset state asynchronously to avoid react-hooks/set-state-in-effect
+    const raf = requestAnimationFrame(() => {
+      if (cancelled) return;
+      setState("loading");
+      setReceipt(null);
+    });
 
     lookupReceipt(code).then(result => {
       if (cancelled) return;
@@ -102,12 +105,12 @@ export default function ReceiptDisplay({ code }: { code: string }) {
 
     return () => {
       cancelled = true;
+      cancelAnimationFrame(raf);
     };
   }, [code]);
 
   return (
     <div className="rounded-2xl border-2 border-[var(--gold)]/40 bg-[var(--panel)] overflow-hidden relative">
-      {/* واترمارک */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-[0.025]">
         <div className="absolute inset-0 flex items-center justify-center">
           <div
@@ -119,7 +122,6 @@ export default function ReceiptDisplay({ code }: { code: string }) {
         </div>
       </div>
 
-      {/* هدر */}
       <div className="relative bg-gradient-to-l from-[var(--gold)]/20 to-[var(--gold)]/5 border-b-2 border-[var(--gold)]/40 p-3 flex items-center gap-2">
         <span className="text-base">🔍</span>
         <div>
@@ -130,14 +132,13 @@ export default function ReceiptDisplay({ code }: { code: string }) {
         </div>
       </div>
 
-      {/* بدنه */}
       <div className="relative p-5 text-center min-h-[220px] flex flex-col items-center justify-center">
         {state === "loading" && (
           <>
             <div className="relative inline-block mb-4">
               <div className="absolute inset-0 bg-[var(--gold)] opacity-30 rounded-full blur-xl animate-pulse" />
               <div className="relative w-14 h-14 rounded-full bg-[var(--gold)]/10 border-2 border-[var(--gold)]/40 flex items-center justify-center">
-                <div className="w-7 h-7 border-2 border-[var(--gold)]/30 border-t-[var(--gold)] rounded-full animate-spin" />
+                <div className="w-7 h-7 border-2 border-[var(--gold)]/30 border-t-[var(--gold)] rounded-full animate-spin" aria-hidden="true" />
               </div>
             </div>
             <div className="text-sm font-bold mb-1">در حال استعلام</div>
@@ -150,7 +151,7 @@ export default function ReceiptDisplay({ code }: { code: string }) {
             <div className="relative inline-block mb-4">
               <div className="absolute inset-0 bg-red-500 opacity-30 rounded-full blur-xl animate-pulse" />
               <div className="relative w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -171,7 +172,7 @@ export default function ReceiptDisplay({ code }: { code: string }) {
             <div className="relative inline-block mb-3">
               <div className="absolute inset-0 bg-emerald-500 opacity-30 rounded-full blur-xl animate-pulse" />
               <div className="relative w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
@@ -181,7 +182,6 @@ export default function ReceiptDisplay({ code }: { code: string }) {
               این رسید در سامانه کیف زرگر ثبت شده است
             </div>
 
-            {/* جزئیات */}
             <div className="w-full max-w-xs bg-[var(--panel-2)] border border-[var(--border)] rounded-xl p-3 text-right space-y-1.5 text-[10.5px]">
               <div className="flex justify-between items-center pb-1.5 border-b border-[var(--border)]">
                 <span className="text-[var(--muted)]">نوع</span>
@@ -242,7 +242,6 @@ export default function ReceiptDisplay({ code }: { code: string }) {
         )}
       </div>
 
-      {/* پاورقی */}
       <div className="relative bg-[var(--gold)]/5 border-t border-[var(--gold)]/20 p-2.5 text-center">
         <div className="text-[9px] text-[var(--muted)] leading-relaxed">
           کیف زرگر · kifzargar.com

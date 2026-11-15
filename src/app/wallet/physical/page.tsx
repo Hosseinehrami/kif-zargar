@@ -1,7 +1,7 @@
 "use client";
 
 import { useToast } from "@/components/ui/Toast";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { format, toFa, toEnDigits } from "@/lib/format";
@@ -106,7 +106,8 @@ export default function PhysicalWithdrawPage() {
     setOtpError("");
     await new Promise(r => setTimeout(r, 700));
 
-    if (code === "1234" || code === (user as any)?.securityPin) {
+        const userPin = (user as { securityPin?: string } | null)?.securityPin;
+    if (code === "1234" || code === userPin) {
       await finalize();
     } else {
       setOtpError("کد امن اشتباه است");
@@ -127,6 +128,7 @@ export default function PhysicalWithdrawPage() {
     const pad = (n: number) => String(n).padStart(2, "0");
     const dateTime = `${toFa(pad(now.getHours()))}:${toFa(pad(now.getMinutes()))} · ${toFa(String(now.getFullYear()))}/${toFa(String(now.getMonth() + 1))}/${toFa(String(now.getDate()))}`;
 
+        // eslint-disable-next-line react-hooks/purity -- only runs inside the async finalize() submit handler, not during render
     const trackingCode = "PHY-" + Math.random().toString(36).slice(2, 8).toUpperCase();
     const pickupCode = needsAdminApproval ? "" : generatePickupCode();
     const serialNumber = !needsAdminApproval && registerOwnership && !isCoin ? generateSerialNumber() : undefined;

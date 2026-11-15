@@ -109,7 +109,8 @@ export default function TransferPage() {
   const noteValid = noteLength >= MIN_NOTE_LENGTH;
   const isValid = !!recipientData && amountNum >= MIN_TRANSFER && enoughBalance && noteValid;
 
-  useEffect(() => {
+    useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets validation state when recipient changes; intentional pattern
     setRecipientError("");
     setRecipientData(null);
     if (!recipient) return;

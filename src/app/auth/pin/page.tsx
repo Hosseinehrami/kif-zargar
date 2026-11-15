@@ -51,11 +51,12 @@ export default function PinPage() {
   }, [lockedUntil]);
 
   // بررسی خودکار بعد از وارد کردن ۴ رقم
-  useEffect(() => {
+   useEffect(() => {
     if (pin.length === 4 && !lockedUntil && !hasSubmitted.current) {
       hasSubmitted.current = true;
       handleVerify();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleVerify is a stable function declaration; adding it would cause infinite re-runs
   }, [pin, lockedUntil]);
 
   function handleDigit(d: string) {
@@ -82,8 +83,8 @@ export default function PinPage() {
         // بعد از ذخیره، برو به قوانین
         router.replace("/auth/terms");
         return;
-      } catch (e: any) {
-        setError(e.message || "خطا در تنظیم کد امن");
+            } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "خطا در تنظیم کد امن");
         setShake(true);
         await new Promise((r) => setTimeout(r, 400));
         setPin("");

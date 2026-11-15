@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { format, toFa, toEnDigits } from "@/lib/format";
 import { SETTINGS } from "@/lib/settings";
 import { useToast } from "@/components/ui/Toast";
@@ -15,6 +14,16 @@ type Side = "long" | "short";
 type MarginMode = "cross" | "isolated";
 type OrderType = "market" | "limit";
 type BottomTab = "positions" | "orders" | "history";
+
+type TradeCalc = {
+  entryPrice: number;
+  positionSizeGold: number;
+  positionValueToman: number;
+  feeGold: number;
+  fundingFeeGold: number;
+  liqPrice: number;
+  isFundingLong: boolean;
+};
 
 const MOCK_HISTORY = [
   { id: "h1", pair: "طلا / تومان", side: "long" as Side, leverage: 20, size: 2.5, entry: 18_500_000, exit: 18_900_000, pnlGold: 0.12, date: "۱۴۰۴/۰۸/۱۲" },
@@ -46,8 +55,89 @@ const generateOrderBook = (basePrice: number) => {
   return { asks: asks.reverse(), bids, maxTotal: Math.max(askTotal, bidTotal) };
 };
 
+// ==========================================
+// TradeSummary — استخراج شده به بیرون از کامپوننت اصلی
+// (قبلاً داخل render تعریف می‌شد و در هر re-render از نو mount می‌شد)
+// ==========================================
+function TradeSummary({
+  side,
+  orderType,
+  collateralNum,
+  calc,
+}: {
+  side: Side;
+  orderType: OrderType;
+  collateralNum: number;
+  calc: TradeCalc;
+}) {
+  if (collateralNum <= 0) return null;
+  const isLong = side === "long";
+
+  return (
+    <div className={`rounded-xl border p-4 text-[12px] space-y-2.5 h-fit shadow-lg shadow-black/20 transition-all duration-300 ${
+      isLong
+        ? "border-[var(--green)]/40 bg-[var(--green)]/5"
+        : "border-[var(--red)]/40 bg-[var(--red)]/5"
+    }`}>
+      <div className="flex justify-between items-center border-b border-[var(--border)] pb-2.5 mb-1.5">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-sm text-[var(--text)]">خلاصه معامله</span>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shadow-sm ${
+            isLong
+              ? "bg-[var(--green)] text-white border-[var(--green)]"
+              : "bg-[var(--red)] text-white border-[var(--red)]"
+          }`}>
+            {isLong ? "خرید (Long)" : "فروش (Short)"}
+          </span>
+        </div>
+        <span className="text-[10px] bg-[var(--panel)] border border-[var(--border)] px-2 py-0.5 rounded text-[var(--muted)]">{orderType === "market" ? "بازار" : "محدود"}</span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-[var(--muted)]">حجم پوزیشن</span>
+        <span className="font-bold text-[13px] font-mono">{toFa(calc.positionSizeGold.toFixed(3))} گرم</span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-[var(--muted)]">ارزش پوزیشن</span>
+        <span className="font-bold text-[13px] text-[var(--text)] font-mono">{format(calc.positionValueToman)} ت</span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-[var(--muted)]">قیمت ورود (با گردی)</span>
+        <span className="font-bold text-[var(--text)] font-mono">{format(calc.entryPrice)} ت</span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-[var(--muted)]">کارمزد معامله</span>
+        <span className="text-[var(--red)] font-bold font-mono">{toFa(calc.feeGold.toFixed(4))} گرم</span>
+      </div>
+
+      <div className="flex justify-between items-start border-t border-[var(--border)] pt-2.5 mt-2">
+        <div className="flex flex-col">
+          <span className="text-[var(--muted)] flex items-center gap-1.5 font-bold">
+            {calc.isFundingLong ? "اجاره (خرید می‌دهد)" : "بلوکه (فروش می‌دهد)"}
+            <span className="text-[8.5px] bg-[var(--panel)] border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text)]">۰.۰۱٪</span>
+          </span>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[9px] text-[var(--green)]">ℹ️ ۲۴ ساعت - روز اول معاف</span>
+            <span className="text-[8.5px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20" dir="ltr">⏱ 23:59:59</span>
+          </div>
+        </div>
+        <span className={`${calc.isFundingLong ? "text-[var(--red)]" : "text-[var(--green)]"} font-bold text-[13px] font-mono`}>
+          {calc.isFundingLong ? "-" : "+"}{toFa(calc.fundingFeeGold.toFixed(4))} گرم
+        </span>
+      </div>
+
+      <div className="flex justify-between items-center pt-2.5 border-t border-[var(--border)] mt-1">
+        <span className="text-[var(--muted)] font-bold text-[13px]">قیمت لیکویید</span>
+        <span className="text-[var(--red)] font-black text-[14px] font-mono bg-[var(--red)]/10 px-2 py-1 rounded-lg border border-[var(--red)]/20">{format(calc.liqPrice)} ت</span>
+      </div>
+    </div>
+  );
+}
+
 export default function LeverageTradingPage() {
-  const router = useRouter();
   const toast = useToast();
   const marketPrice = SETTINGS.fees.goldPrice;
 
@@ -69,7 +159,7 @@ export default function LeverageTradingPage() {
   const userTotalGold = 12.45;
   const collateralNum = Number(collateralGold) || 0;
 
-  const calc = useMemo(() => {
+  const calc = useMemo<TradeCalc>(() => {
     const baseEntryPrice = orderType === "limit" && Number(limitPrice) > 0
       ? Number(limitPrice)
       : marketPrice;
@@ -125,74 +215,6 @@ export default function LeverageTradingPage() {
       toast.success(`سفارش ${orderType === "market" ? "بازار" : "محدود"} با موفقیت ثبت شد`);
     }, 800);
   }
-
-  const TradeSummary = () => {
-    if (collateralNum <= 0) return null;
-    const isLong = side === "long";
-
-    return (
-      <div className={`rounded-xl border p-4 text-[12px] space-y-2.5 h-fit shadow-lg shadow-black/20 transition-all duration-300 ${
-        isLong
-          ? "border-[var(--green)]/40 bg-[var(--green)]/5"
-          : "border-[var(--red)]/40 bg-[var(--red)]/5"
-      }`}>
-        <div className="flex justify-between items-center border-b border-[var(--border)] pb-2.5 mb-1.5">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-sm text-[var(--text)]">خلاصه معامله</span>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shadow-sm ${
-              isLong
-                ? "bg-[var(--green)] text-white border-[var(--green)]"
-                : "bg-[var(--red)] text-white border-[var(--red)]"
-            }`}>
-              {isLong ? "خرید (Long)" : "فروش (Short)"}
-            </span>
-          </div>
-          <span className="text-[10px] bg-[var(--panel)] border border-[var(--border)] px-2 py-0.5 rounded text-[var(--muted)]">{orderType === "market" ? "بازار" : "محدود"}</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">حجم پوزیشن</span>
-          <span className="font-bold text-[13px] font-mono">{toFa(calc.positionSizeGold.toFixed(3))} گرم</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">ارزش پوزیشن</span>
-          <span className="font-bold text-[13px] text-[var(--text)] font-mono">{format(calc.positionValueToman)} ت</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">قیمت ورود (با گردی)</span>
-          <span className="font-bold text-[var(--text)] font-mono">{format(calc.entryPrice)} ت</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">کارمزد معامله</span>
-          <span className="text-[var(--red)] font-bold font-mono">{toFa(calc.feeGold.toFixed(4))} گرم</span>
-        </div>
-
-        <div className="flex justify-between items-start border-t border-[var(--border)] pt-2.5 mt-2">
-          <div className="flex flex-col">
-            <span className="text-[var(--muted)] flex items-center gap-1.5 font-bold">
-              {calc.isFundingLong ? "اجاره (خرید می‌دهد)" : "بلوکه (فروش می‌دهد)"}
-              <span className="text-[8.5px] bg-[var(--panel)] border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text)]">۰.۰۱٪</span>
-            </span>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-[9px] text-[var(--green)]">ℹ️ ۲۴ ساعت - روز اول معاف</span>
-              <span className="text-[8.5px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20" dir="ltr">⏱ 23:59:59</span>
-            </div>
-          </div>
-          <span className={`${calc.isFundingLong ? "text-[var(--red)]" : "text-[var(--green)]"} font-bold text-[13px] font-mono`}>
-            {calc.isFundingLong ? "-" : "+"}{toFa(calc.fundingFeeGold.toFixed(4))} گرم
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center pt-2.5 border-t border-[var(--border)] mt-1">
-          <span className="text-[var(--muted)] font-bold text-[13px]">قیمت لیکویید</span>
-          <span className="text-[var(--red)] font-black text-[14px] font-mono bg-[var(--red)]/10 px-2 py-1 rounded-lg border border-[var(--red)]/20">{format(calc.liqPrice)} ت</span>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="h-[calc(100dvh-130px)] flex flex-col bg-[var(--bg)] text-[var(--text)] font-sans" dir="rtl">
@@ -374,7 +396,7 @@ export default function LeverageTradingPage() {
           </div>
 
           <div className="lg:hidden mb-2">
-            <TradeSummary />
+            <TradeSummary side={side} orderType={orderType} collateralNum={collateralNum} calc={calc} />
           </div>
 
           <button onClick={handleSubmit} disabled={!isValid || isSubmitting} className={`w-full h-9 rounded font-bold text-[11px] text-white transition ${side === "long" ? "bg-[var(--green)] hover:bg-[var(--green)]/90" : "bg-[var(--red)] hover:bg-[var(--red)]/90"} disabled:opacity-50`}>
@@ -384,7 +406,7 @@ export default function LeverageTradingPage() {
 
         {/* خلاصه معامله */}
         <div className="hidden lg:flex flex-col w-[320px] shrink-0 bg-[var(--bg)] p-3 overflow-y-auto border-r border-[var(--border)]">
-          <TradeSummary />
+          <TradeSummary side={side} orderType={orderType} collateralNum={collateralNum} calc={calc} />
         </div>
 
         <div className="hidden lg:flex flex-1 bg-[var(--bg)]"></div>

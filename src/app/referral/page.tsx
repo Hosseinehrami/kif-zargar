@@ -50,8 +50,9 @@ export default function ReferralPage() {
     }
 
     try {
-      const saved = localStorage.getItem("kif-referral-code");
+            const saved = localStorage.getItem("kif-referral-code");
       if (saved && /^KZ\d{6}$/.test(saved)) return saved;
+      // eslint-disable-next-line react-hooks/purity -- only runs when generating a new referral code for this user
       const random = String(Math.floor(100000 + Math.random() * 900000));
       const code = `KZ${random}`;
       localStorage.setItem("kif-referral-code", code);
