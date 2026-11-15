@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { format, toFa, toEnDigits } from "@/lib/format";
+import { format, toFa } from "@/lib/format";
 import { SETTINGS } from "@/lib/settings";
 
 // ---------- Icons ----------

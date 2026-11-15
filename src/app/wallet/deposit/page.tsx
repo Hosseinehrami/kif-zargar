@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { format, toFa, toEnDigits } from "@/lib/format";
+import { format, toEnDigits } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
 
 const PLATFORM_IBAN = "IR820170000000123456789012";
@@ -391,8 +391,11 @@ export default function DepositPage() {
 
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">تصویر فیش واریزی</label>
               <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full h-32 rounded-lg border-2 border-dashed border-[var(--border)] hover:border-[var(--gold)]/50 bg-[var(--bg)] flex flex-col items-center justify-center gap-1.5 transition overflow-hidden">
-                {receiptImage ? (
-                  <img src={receiptImage} alt="فیش واریزی" className="w-full h-full object-contain" />
+                                {receiptImage ? (
+                  <div className="w-full h-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded receipt preview (data URL); not eligible for next/image optimization */}
+                    <img src={receiptImage} alt="فیش واریزی" className="w-full h-full object-contain" />
+                  </div>
                 ) : (
                   <>
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>

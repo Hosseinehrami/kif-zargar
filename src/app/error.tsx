@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function Error({
   error,
@@ -89,12 +90,12 @@ export default function Error({
             </svg>
             تلاش مجدد
           </button>
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="flex-1 h-10 rounded-xl border border-[var(--border)] bg-[var(--panel)] text-[var(--text)] text-[11px] font-bold hover:bg-[var(--panel-2)] transition"
+                    <Link
+            href="/"
+            className="flex-1 h-10 rounded-xl border border-[var(--border)] bg-[var(--panel)] text-[var(--text)] text-[11px] font-bold hover:bg-[var(--panel-2)] transition flex items-center justify-center"
           >
             صفحه اصلی
-          </button>
+          </Link>
         </div>
 
         {/* راهنما */}

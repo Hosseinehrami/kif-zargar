@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { format, toFa, toEnDigits } from "@/lib/format";
 import { SETTINGS } from "@/lib/settings";
@@ -22,11 +21,6 @@ type SymbolItem = {
   balance: number;
 };
 
-const BUYER_INFO = {
-  name: "علی رضایی",
-  nationalId: "0012345678",
-  phone: "09121234567",
-};
 
 type Side = "buy" | "sell";
 type OrderType = "instant" | "limit";
@@ -50,7 +44,6 @@ function ExchangeIcon() {
 }
 
 export default function TradePage() {
-  const router = useRouter();
   const { user } = useAuth();
   const toast = useToast();
   const marketGoldPrice = SETTINGS.fees.goldPrice;
@@ -71,7 +64,6 @@ export default function TradePage() {
   const [price, setPrice] = useState(symbols[0].price);
   const [amountInput, setAmountInput] = useState(String(symbols[0].price));
   const [gramsInput, setGramsInput] = useState("1");
-  const [lastEdited, setLastEdited] = useState<"amount" | "grams">("grams");
   const [percent, setPercent] = useState<number | null>(null);
   const [typeOpen, setTypeOpen] = useState(false);
   const [symbolOpen, setSymbolOpen] = useState(false);
@@ -81,7 +73,6 @@ export default function TradePage() {
   const MARKET_PRICE = symbol.price;
   const GOLD_BALANCE = symbol.balance;
   const isIntegerUnit = symbol.kind === "coin" || symbol.kind === "currency";
-  const unitStep = isIntegerUnit ? 1 : 0.1;
 
   const effectivePrice = orderType === "instant" ? MARKET_PRICE : price;
   const grams = Math.max(0, Number(gramsInput) || 0);
@@ -90,7 +81,6 @@ export default function TradePage() {
   const total = side === "buy" ? amount + fee : amount - fee;
   const enoughBalance = side === "buy" ? total <= CASH_BALANCE : grams <= GOLD_BALANCE;
 
-  const showPriceField = orderType === "limit";
   const showAmountField = orderType === "instant" || (orderType === "limit" && side === "buy");
   const showGramsField = orderType === "instant" || (orderType === "limit" && side === "sell");
 
@@ -105,15 +95,13 @@ export default function TradePage() {
       const target = maxAmount * (p / 100);
       let units = target / effectivePrice;
       if (isIntegerUnit) units = Math.floor(units);
-      setGramsInput(isIntegerUnit ? String(units) : units.toFixed(4));
+            setGramsInput(isIntegerUnit ? String(units) : units.toFixed(4));
       setAmountInput(String(Math.round(units * effectivePrice)));
-      setLastEdited("grams");
     } else {
       let units = GOLD_BALANCE * (p / 100);
       if (isIntegerUnit) units = Math.floor(units);
-      setGramsInput(isIntegerUnit ? String(units) : units.toFixed(4));
+            setGramsInput(isIntegerUnit ? String(units) : units.toFixed(4));
       setAmountInput(String(Math.round(units * effectivePrice)));
-      setLastEdited("grams");
     }
   }
 

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { format, toFa } from "@/lib/format";
 import { SETTINGS } from "@/lib/settings";
 import { useToast } from "@/components/ui/Toast";
@@ -149,7 +148,6 @@ type Filter = "all" | "deposit" | "withdraw" | "transfer" | "trade";
 
 export default function WalletPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const toast = useToast();
   const [hideBalance, setHideBalance] = useState(false);
   const [copied, setCopied] = useState(false);
