@@ -131,57 +131,64 @@ export default function LeverageTradingPage() {
     const isLong = side === "long";
 
     return (
-      <div className={`rounded-xl border p-3 text-[11px] space-y-2 h-fit shadow-lg shadow-black/20 ${
+      <div className={`rounded-xl border p-4 text-[12px] space-y-2.5 h-fit shadow-lg shadow-black/20 transition-all duration-300 ${
         isLong
           ? "border-[var(--green)]/40 bg-[var(--green)]/5"
           : "border-[var(--red)]/40 bg-[var(--red)]/5"
       }`}>
-        <div className="flex justify-between items-center border-b border-[var(--border)] pb-2 mb-1">
+        <div className="flex justify-between items-center border-b border-[var(--border)] pb-2.5 mb-1.5">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xs text-[var(--text)]">خلاصه معامله</span>
-            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${isLong ? "bg-[var(--green)] text-white border-[var(--green)]" : "bg-[var(--red)] text-white border-[var(--red)]"}`}>
-              {isLong ? "خرید" : "فروش"}
+            <span className="font-bold text-sm text-[var(--text)]">خلاصه معامله</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shadow-sm ${
+              isLong
+                ? "bg-[var(--green)] text-white border-[var(--green)]"
+                : "bg-[var(--red)] text-white border-[var(--red)]"
+            }`}>
+              {isLong ? "خرید (Long)" : "فروش (Short)"}
             </span>
           </div>
-          <span className="text-[9px] bg-[var(--panel)] border border-[var(--border)] px-1.5 py-0.5 rounded text-[var(--muted)]">{orderType === "market" ? "بازار" : "محدود"}</span>
+          <span className="text-[10px] bg-[var(--panel)] border border-[var(--border)] px-2 py-0.5 rounded text-[var(--muted)]">{orderType === "market" ? "بازار" : "محدود"}</span>
         </div>
 
         <div className="flex justify-between items-center">
           <span className="text-[var(--muted)]">حجم پوزیشن</span>
-          <span className="font-bold text-[12px] font-mono">{toFa(calc.positionSizeGold.toFixed(3))} گرم</span>
+          <span className="font-bold text-[13px] font-mono">{toFa(calc.positionSizeGold.toFixed(3))} گرم</span>
         </div>
 
         <div className="flex justify-between items-center">
           <span className="text-[var(--muted)]">ارزش پوزیشن</span>
-          <span className="font-bold text-[12px] text-[var(--text)] font-mono">{format(calc.positionValueToman)} ت</span>
+          <span className="font-bold text-[13px] text-[var(--text)] font-mono">{format(calc.positionValueToman)} ت</span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">قیمت ورود</span>
+          <span className="text-[var(--muted)]">قیمت ورود (با گردی)</span>
           <span className="font-bold text-[var(--text)] font-mono">{format(calc.entryPrice)} ت</span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)]">کارمزد</span>
+          <span className="text-[var(--muted)]">کارمزد معامله</span>
           <span className="text-[var(--red)] font-bold font-mono">{toFa(calc.feeGold.toFixed(4))} گرم</span>
         </div>
 
-        <div className="flex justify-between items-start border-t border-[var(--border)] pt-2 mt-1">
+        <div className="flex justify-between items-start border-t border-[var(--border)] pt-2.5 mt-2">
           <div className="flex flex-col">
-            <span className="text-[var(--muted)] flex items-center gap-1 font-bold text-[10px]">
+            <span className="text-[var(--muted)] flex items-center gap-1.5 font-bold">
               {calc.isFundingLong ? "اجاره (خرید می‌دهد)" : "بلوکه (فروش می‌دهد)"}
-              <span className="text-[8px] bg-[var(--panel)] border border-[var(--border)] rounded px-1 py-0.5 text-[var(--text)]">۰.۰۱٪</span>
+              <span className="text-[8.5px] bg-[var(--panel)] border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text)]">۰.۰۱٪</span>
             </span>
-            <span className="text-[8.5px] text-[var(--green)] mt-0.5">ℹ️ ۲۴ ساعت - روز اول معاف</span>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[9px] text-[var(--green)]">ℹ️ ۲۴ ساعت - روز اول معاف</span>
+              <span className="text-[8.5px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20" dir="ltr">⏱ 23:59:59</span>
+            </div>
           </div>
-          <span className={`${calc.isFundingLong ? "text-[var(--red)]" : "text-[var(--green)]"} font-bold text-[11px] font-mono`}>
+          <span className={`${calc.isFundingLong ? "text-[var(--red)]" : "text-[var(--green)]"} font-bold text-[13px] font-mono`}>
             {calc.isFundingLong ? "-" : "+"}{toFa(calc.fundingFeeGold.toFixed(4))} گرم
           </span>
         </div>
 
-        <div className="flex justify-between items-center pt-2 border-t border-[var(--border)] mt-1">
-          <span className="text-[var(--muted)] font-bold text-xs">قیمت لیکویید</span>
-          <span className="text-[var(--red)] font-black text-[13px] font-mono bg-[var(--red)]/10 px-1.5 py-0.5 rounded border border-[var(--red)]/20">{format(calc.liqPrice)} ت</span>
+        <div className="flex justify-between items-center pt-2.5 border-t border-[var(--border)] mt-1">
+          <span className="text-[var(--muted)] font-bold text-[13px]">قیمت لیکویید</span>
+          <span className="text-[var(--red)] font-black text-[14px] font-mono bg-[var(--red)]/10 px-2 py-1 rounded-lg border border-[var(--red)]/20">{format(calc.liqPrice)} ت</span>
         </div>
       </div>
     );
@@ -191,23 +198,33 @@ export default function LeverageTradingPage() {
     <div className="h-[calc(100dvh-130px)] flex flex-col bg-[var(--bg)] text-[var(--text)] font-sans" dir="rtl">
 
       {/* هدر قیمت */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] bg-[var(--panel)] shrink-0 h-10">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold">طلا / تومان</span>
-          <span className="text-sm font-black text-[var(--green)] font-mono">{format(marketPrice)}</span>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] bg-[var(--panel)] shrink-0 h-11">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold">طلا / تومان</span>
+            <span className="text-[9px] text-[var(--muted)]">XAU/IRT</span>
+          </div>
+          <div className="flex items-center gap-2 border-r border-[var(--border)] pr-3">
+            <span className="text-sm font-black text-[var(--green)] font-mono">{format(marketPrice)}</span>
+            <span className="text-[9px] text-[var(--green)] bg-[var(--green)]/10 px-1.5 py-0.5 rounded font-mono">+۲.۴۵٪</span>
+          </div>
         </div>
-        <span className="text-[9px] text-[var(--green)] bg-[var(--green)]/10 px-1.5 py-0.5 rounded font-mono">+۲.۴۵٪</span>
+        <div className="flex items-center gap-4 text-[9px] text-[var(--muted)]">
+          <div className="flex items-center gap-1"><span>بالاترین:</span><span className="text-[var(--text)] font-mono">{format(marketPrice + 150_000)}</span></div>
+          <div className="flex items-center gap-1"><span>پایین‌ترین:</span><span className="text-[var(--text)] font-mono">{format(marketPrice - 100_000)}</span></div>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
 
-        {/* دفتر سفارشات - فقط دسکتاپ */}
+        {/* دفتر سفارشات */}
         <div className="hidden lg:flex w-[260px] border-l border-[var(--border)] flex-col shrink-0 bg-[var(--panel)]">
           <div className="grid grid-cols-3 text-[8.5px] text-[var(--muted)] p-1 bg-[var(--panel-2)] border-b border-[var(--border)]">
-            <span className="text-right">قیمت</span>
-            <span className="text-center">مقدار</span>
-            <span className="text-left">جمع</span>
+            <span className="text-right">قیمت (تومان)</span>
+            <span className="text-center">مقدار (گرم)</span>
+            <span className="text-left">جمع (تومان)</span>
           </div>
+
           <div className="flex-1 flex flex-col justify-end">
             {orderBook.asks.map((ask, i) => (
               <div key={i} onClick={() => { setOrderType("limit"); setLimitPrice(String(ask.price)); }} className="relative grid grid-cols-3 px-2 py-[3px] text-[9.5px] cursor-pointer hover:bg-white/5 transition">
@@ -218,11 +235,13 @@ export default function LeverageTradingPage() {
               </div>
             ))}
           </div>
+
           <div className="grid grid-cols-3 px-2 py-1 bg-[var(--panel-2)] border-y border-[var(--border)] items-center">
             <span className="text-[12px] font-black text-[var(--green)] text-right font-mono">{format(marketPrice)}</span>
             <span className="text-[8px] text-[var(--muted)] text-center">اسپرد</span>
             <span className="text-[9px] text-[var(--muted)] text-left font-mono" dir="ltr">۲۰,۰۰۰</span>
           </div>
+
           <div className="flex-1 flex flex-col">
             {orderBook.bids.map((bid, i) => (
               <div key={i} onClick={() => { setOrderType("limit"); setLimitPrice(String(bid.price)); }} className="relative grid grid-cols-3 px-2 py-[3px] text-[9.5px] cursor-pointer hover:bg-white/5 transition">
@@ -238,7 +257,6 @@ export default function LeverageTradingPage() {
         {/* فرم */}
         <div className="w-full lg:w-[360px] shrink-0 flex flex-col overflow-y-auto p-2 lg:border-l lg:border-[var(--border)]">
 
-          {/* موجودی */}
           <div className="flex justify-between items-center text-[10px] mb-1.5 bg-[var(--panel-2)] p-2 rounded border border-[var(--border)]">
             <div className="flex flex-col">
               <span className="text-[var(--muted)]">موجودی کیف:</span>
@@ -250,27 +268,34 @@ export default function LeverageTradingPage() {
             </div>
           </div>
 
-          {/* حالت margin */}
           <div className="mb-1.5">
             <div className="flex gap-1 bg-[var(--panel-2)] p-0.5 rounded border border-[var(--border)] h-7">
-              <button onClick={() => { setMarginMode("cross"); setShowMarginInfo("cross"); }} className={`flex-1 text-[10px] font-bold rounded-sm transition-all ${marginMode === "cross" ? "bg-[var(--panel)] text-[var(--gold)] shadow-sm" : "text-[var(--muted)]"}`}>کل موجودی</button>
-              <button onClick={() => { setMarginMode("isolated"); setShowMarginInfo("isolated"); }} className={`flex-1 text-[10px] font-bold rounded-sm transition-all ${marginMode === "isolated" ? "bg-[var(--panel)] text-[var(--gold)] shadow-sm" : "text-[var(--muted)]"}`}>مبلغ معامله</button>
+              <button
+                onClick={() => { setMarginMode("cross"); setShowMarginInfo("cross"); }}
+                className={`flex-1 text-[10px] font-bold rounded-sm transition-all ${marginMode === "cross" ? "bg-[var(--panel)] text-[var(--gold)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--text)]"}`}
+              >
+                کل موجودی
+              </button>
+              <button
+                onClick={() => { setMarginMode("isolated"); setShowMarginInfo("isolated"); }}
+                className={`flex-1 text-[10px] font-bold rounded-sm transition-all ${marginMode === "isolated" ? "bg-[var(--panel)] text-[var(--gold)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--text)]"}`}
+              >
+                مبلغ معامله
+              </button>
             </div>
             {showMarginInfo && (
               <div className="mt-1 p-1.5 rounded bg-[var(--panel-2)] border border-[var(--border)] text-[9px] text-[var(--muted)] leading-relaxed relative fade-in">
                 <button onClick={() => setShowMarginInfo(null)} className="absolute top-0.5 left-0.5 text-[var(--muted)] hover:text-white">✕</button>
-                {showMarginInfo === "cross" ? <span>در حالت <b>کل موجودی</b>، تمام طلا پشتیبان است.</span> : <span>در حالت <b>مبلغ معامله</b>، فقط طلای این کادر در خطر است.</span>}
+                {showMarginInfo === "cross" ? <span>در حالت <b>کل موجودی</b>، تمام طلا پشتیبان است (ریسک کمتر).</span> : <span>در حالت <b>مبلغ معامله</b>، فقط طلای این کادر در خطر است.</span>}
               </div>
             )}
           </div>
 
-          {/* خرید/فروش */}
           <div className="flex gap-1.5 mb-2">
-            <button onClick={() => setSide("long")} className={`flex-1 h-8 rounded font-bold text-[11px] transition ${side === "long" ? "bg-[var(--green)] text-white" : "bg-[var(--panel-2)] text-[var(--muted)]"}`}>خرید</button>
-            <button onClick={() => setSide("short")} className={`flex-1 h-8 rounded font-bold text-[11px] transition ${side === "short" ? "bg-[var(--red)] text-white" : "bg-[var(--panel-2)] text-[var(--muted)]"}`}>فروش</button>
+            <button onClick={() => setSide("long")} className={`flex-1 h-8 rounded font-bold text-[11px] transition ${side === "long" ? "bg-[var(--green)] text-white shadow-md shadow-[var(--green)]/20" : "bg-[var(--panel-2)] text-[var(--muted)] hover:bg-[var(--panel)]"}`}>خرید</button>
+            <button onClick={() => setSide("short")} className={`flex-1 h-8 rounded font-bold text-[11px] transition ${side === "short" ? "bg-[var(--red)] text-white shadow-md shadow-[var(--red)]/20" : "bg-[var(--panel-2)] text-[var(--muted)] hover:bg-[var(--panel)]"}`}>فروش</button>
           </div>
 
-          {/* اهرم */}
           <div className="mb-2">
             <div className="flex justify-between text-[10px] mb-1">
               <span className="text-[var(--muted)]">اهرم</span>
@@ -280,9 +305,12 @@ export default function LeverageTradingPage() {
             <div className="flex justify-between text-[8px] text-[var(--muted)] mt-1 font-mono" dir="ltr"><span>1x</span><span>5x</span><span>10x</span><span>15x</span><span>20x</span></div>
           </div>
 
-          {/* نوع سفارش */}
           <div className="mb-2">
-            <select value={orderType} onChange={(e) => setOrderType(e.target.value as OrderType)} className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[10px] outline-none text-[var(--text)] focus:border-[var(--gold)]">
+            <select
+              value={orderType}
+              onChange={(e) => setOrderType(e.target.value as OrderType)}
+              className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[10px] outline-none text-[var(--text)] focus:border-[var(--gold)]"
+            >
               <option value="market">نوع سفارش: بازار</option>
               <option value="limit">نوع سفارش: محدود</option>
             </select>
@@ -290,18 +318,27 @@ export default function LeverageTradingPage() {
 
           {orderType === "limit" && (
             <div className="mb-2 fade-in">
-              <input type="text" dir="ltr" value={limitPrice} onChange={(e) => setLimitPrice(toEnDigits(e.target.value).replace(/\D/g, ""))} placeholder={`قیمت ورود: ${format(marketPrice)}`} className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[11px] text-left font-mono outline-none focus:border-[var(--gold)]" />
+              <input
+                type="text" dir="ltr" value={limitPrice}
+                onChange={(e) => setLimitPrice(toEnDigits(e.target.value).replace(/\D/g, ""))}
+                placeholder={`قیمت ورود: ${format(marketPrice)}`}
+                className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[11px] text-left font-mono outline-none focus:border-[var(--gold)]"
+              />
             </div>
           )}
 
-          {/* وجه تضمین */}
           <div className="mb-2">
             <div className="flex justify-between text-[10px] mb-1">
               <span className="text-[var(--muted)]">وجه تضمین (طلا)</span>
               <span className="text-[var(--muted)] text-[9px]">حداقل: ۰.۱ گرم</span>
             </div>
             <div className="relative flex items-center bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 focus-within:border-[var(--gold)]">
-              <input type="text" dir="ltr" value={collateralGold} onChange={(e) => handleCollateralChange(toEnDigits(e.target.value).replace(/[^\d.]/g, ""))} placeholder="0.000" className="w-full bg-transparent text-left text-[12px] font-bold font-mono outline-none placeholder:text-[var(--muted)] placeholder:font-normal" />
+              <input
+                type="text" dir="ltr" value={collateralGold}
+                onChange={(e) => handleCollateralChange(toEnDigits(e.target.value).replace(/[^\d.]/g, ""))}
+                placeholder="0.000"
+                className="w-full bg-transparent text-left text-[12px] font-bold font-mono outline-none placeholder:text-[var(--muted)] placeholder:font-normal"
+              />
               <span className="text-[9px] text-[var(--muted)] mr-1.5 border-r border-[var(--border)] pr-1.5">گرم</span>
             </div>
 
@@ -309,7 +346,17 @@ export default function LeverageTradingPage() {
               {[25, 50, 75, 100].map((p) => {
                 const isActive = activePercent === p;
                 return (
-                  <button key={p} onClick={() => setMarginPercent(p)} className={`flex-1 h-6 rounded-full text-[9px] font-bold border transition-all ${isActive ? (side === "long" ? "bg-[var(--green)] text-white border-[var(--green)]" : "bg-[var(--red)] text-white border-[var(--red)]") : "bg-[var(--panel-2)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--gold)]/50"}`}>
+                  <button
+                    key={p}
+                    onClick={() => setMarginPercent(p)}
+                    className={`flex-1 h-6 rounded-full text-[9px] font-bold border transition-all duration-200 ${
+                      isActive
+                        ? side === "long"
+                          ? "bg-[var(--green)] text-white border-[var(--green)] shadow-sm shadow-[var(--green)]/30"
+                          : "bg-[var(--red)] text-white border-[var(--red)] shadow-sm shadow-[var(--red)]/30"
+                        : "bg-[var(--panel-2)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--gold)]/50"
+                    }`}
+                  >
                     {toFa(String(p))}٪
                   </button>
                 );
@@ -317,35 +364,25 @@ export default function LeverageTradingPage() {
             </div>
           </div>
 
-          {/* TP/SL */}
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <input type="text" dir="ltr" value={tpPrice} onChange={(e) => setTpPrice(toEnDigits(e.target.value).replace(/\D/g, ""))} placeholder="حد سود" className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[10px] font-mono outline-none focus:border-[var(--green)]" />
-            <input type="text" dir="ltr" value={slPrice} onChange={(e) => setSlPrice(toEnDigits(e.target.value).replace(/\D/g, ""))} placeholder="حد ضرر" className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[10px] font-mono outline-none focus:border-[var(--red)]" />
-          </div>
-
-          {/* خلاصه فشرده — فقط موبایل */}
-          {collateralNum > 0 && (
-            <div className="lg:hidden mt-1 rounded-lg border border-[var(--border)] bg-[var(--panel-2)] p-2 space-y-1 mb-2">
-              <div className="flex justify-between text-[9.5px]">
-                <span className="text-[var(--muted)]">حجم پوزیشن</span>
-                <span className="font-bold font-mono text-[10px]">{toFa(calc.positionSizeGold.toFixed(3))} گرم</span>
-              </div>
-              <div className="flex justify-between text-[9.5px]">
-                <span className="text-[var(--muted)]">قیمت لیکویید</span>
-                <span className="font-bold font-mono text-[10px] text-[var(--red)]">{format(calc.liqPrice)} ت</span>
-              </div>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <input type="text" dir="ltr" value={tpPrice} onChange={(e) => setTpPrice(toEnDigits(e.target.value).replace(/\D/g, ""))} placeholder="حد سود (اختیاری)" className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[10px] font-mono outline-none focus:border-[var(--green)]" />
             </div>
-          )}
-
-          {/* دکمه ثبت */}
-          <div className="lg:mt-auto pt-2">
-            <button onClick={handleSubmit} disabled={!isValid || isSubmitting} className={`w-full h-9 rounded font-bold text-[11px] text-white transition ${side === "long" ? "bg-[var(--green)] hover:bg-[var(--green)]/90" : "bg-[var(--red)] hover:bg-[var(--red)]/90"} disabled:opacity-50`}>
-              {isSubmitting ? "در حال ارسال..." : `ثبت سفارش ${side === "long" ? "خرید" : "فروش"}`}
-            </button>
+            <div>
+              <input type="text" dir="ltr" value={slPrice} onChange={(e) => setSlPrice(toEnDigits(e.target.value).replace(/\D/g, ""))} placeholder="حد ضرر (اختیاری)" className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded px-2 h-8 text-[10px] font-mono outline-none focus:border-[var(--red)]" />
+            </div>
           </div>
+
+          <div className="lg:hidden mb-2">
+            <TradeSummary />
+          </div>
+
+          <button onClick={handleSubmit} disabled={!isValid || isSubmitting} className={`w-full h-9 rounded font-bold text-[11px] text-white transition ${side === "long" ? "bg-[var(--green)] hover:bg-[var(--green)]/90" : "bg-[var(--red)] hover:bg-[var(--red)]/90"} disabled:opacity-50`}>
+            {isSubmitting ? "در حال ارسال..." : `ثبت سفارش ${side === "long" ? "خرید" : "فروش"}`}
+          </button>
         </div>
 
-        {/* خلاصه کامل — دسکتاپ */}
+        {/* خلاصه معامله */}
         <div className="hidden lg:flex flex-col w-[320px] shrink-0 bg-[var(--bg)] p-3 overflow-y-auto border-r border-[var(--border)]">
           <TradeSummary />
         </div>
@@ -353,16 +390,16 @@ export default function LeverageTradingPage() {
         <div className="hidden lg:flex flex-1 bg-[var(--bg)]"></div>
       </div>
 
-      {/* تب‌های پایین — ارتفاع کمتر در موبایل */}
-      <div className="h-[150px] sm:h-[180px] lg:h-[240px] border-t border-[var(--border)] bg-[var(--panel)] flex flex-col shrink-0">
+      {/* پایین */}
+      <div className="h-[240px] border-t border-[var(--border)] bg-[var(--panel)] flex flex-col shrink-0">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-1">
-          <div className="flex overflow-x-auto">
-            <button onClick={() => setBottomTab("positions")} className={`px-2 sm:px-3 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold border-b-2 whitespace-nowrap transition ${bottomTab === "positions" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-[var(--muted)]"}`}>پوزیشن‌ها (۱)</button>
-            <button onClick={() => setBottomTab("orders")} className={`px-2 sm:px-3 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold border-b-2 whitespace-nowrap transition ${bottomTab === "orders" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-[var(--muted)]"}`}>سفارشات (۰)</button>
-            <button onClick={() => setBottomTab("history")} className={`px-2 sm:px-3 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold border-b-2 whitespace-nowrap transition ${bottomTab === "history" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-[var(--muted)]"}`}>تاریخچه</button>
+          <div className="flex">
+            <button onClick={() => setBottomTab("positions")} className={`px-3 py-2 text-[10px] font-bold border-b-2 transition ${bottomTab === "positions" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-[var(--muted)]"}`}>پوزیشن‌های باز (۱)</button>
+            <button onClick={() => setBottomTab("orders")} className={`px-3 py-2 text-[10px] font-bold border-b-2 transition ${bottomTab === "orders" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-[var(--muted)]"}`}>سفارشات (۰)</button>
+            <button onClick={() => setBottomTab("history")} className={`px-3 py-2 text-[10px] font-bold border-b-2 transition ${bottomTab === "history" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-[var(--muted)]"}`}>تاریخچه معاملات</button>
           </div>
           {bottomTab === "positions" && (
-            <button className="text-[8px] sm:text-[9px] text-[var(--red)] border border-[var(--red)]/30 bg-[var(--red)]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap shrink-0">بستن همه</button>
+            <button className="text-[9px] text-[var(--red)] border border-[var(--red)]/30 bg-[var(--red)]/10 px-2 py-1 rounded hover:bg-[var(--red)]/20 transition">بستن همه</button>
           )}
         </div>
 
@@ -372,21 +409,25 @@ export default function LeverageTradingPage() {
             {bottomTab === "positions" && (
               <>
                 <div className="grid grid-cols-9 text-[9px] text-[var(--muted)] px-2 py-1.5 bg-[var(--panel-2)] rounded-t">
-                  <span>جفت‌ارز</span><span>حالت</span><span>جهت</span><span>اهرم</span><span>حجم</span><span>ورود</span><span>سود/زیان</span><span>اجاره/بلوکه</span><span>عملیات</span>
+                  <span>جفت‌ارز</span><span>حالت</span><span>جهت</span><span>اهرم</span><span>حجم (گرم)</span><span>ورود</span><span>سود/زیان</span><span>اجاره/بلوکه</span><span>عملیات</span>
                 </div>
                 {MOCK_POSITIONS.map((p) => (
                   <div key={p.id} className="grid grid-cols-9 items-center text-[10px] px-2 py-2 border-b border-[var(--border)] hover:bg-[var(--panel-2)] transition">
                     <span className="font-bold">{p.pair}</span>
                     <span className="text-[var(--gold)] text-[9px]">{p.mode}</span>
-                    <span className={p.side === "long" ? "text-[var(--green)] font-bold" : "text-[var(--red)] font-bold"}>{p.side === "long" ? "خرید" : "فروش"}</span>
+                    <span className={p.side === "long" ? "text-[var(--green)] font-bold" : "text-[var(--red)] font-bold"}>
+                      {p.side === "long" ? "خرید" : "فروش"}
+                    </span>
                     <span className="bg-[var(--panel)] border border-[var(--border)] rounded px-1 py-0.5 w-fit text-[9px] font-mono">{toFa(String(p.leverage))}x</span>
                     <span className="font-mono">{toFa(p.size.toFixed(3))}</span>
                     <span className="font-mono">{format(p.entry)}</span>
                     <span className="text-[var(--green)] font-bold font-mono">+{toFa(p.pnlGold.toFixed(3))}</span>
-                    <span className="text-[8.5px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 w-fit">⏳ {p.fundingStatus}</span>
+                    <span className="text-[8.5px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 w-fit">
+                      ⏳ {p.fundingStatus}
+                    </span>
                     <div className="flex gap-2">
                       <button className="text-[var(--gold)] hover:underline">بستن</button>
-                      <button className="text-[var(--muted)] hover:text-white">حد</button>
+                      <button className="text-[var(--muted)] hover:text-white">حد سود/ضرر</button>
                     </div>
                   </div>
                 ))}
@@ -398,8 +439,17 @@ export default function LeverageTradingPage() {
                 <div className="grid grid-cols-7 text-[9px] text-[var(--muted)] px-2 py-1.5 bg-[var(--panel-2)] rounded-t">
                   <span>جفت‌ارز</span><span>نوع</span><span>جهت</span><span>قیمت</span><span>مقدار</span><span>پر شده</span><span>عملیات</span>
                 </div>
-                <div className="flex flex-col items-center justify-center h-[80px] text-[var(--muted)] space-y-1">
-                  <span className="text-[10px]">سفارش فعالی ندارید.</span>
+                <div className="flex flex-col items-center justify-center h-[140px] text-[var(--muted)] space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-[var(--panel-2)] flex items-center justify-center border border-[var(--border)]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                  </div>
+                  <span className="text-[10px]">سفارش فعالی برای نمایش وجود ندارد.</span>
                 </div>
               </>
             )}
@@ -407,17 +457,21 @@ export default function LeverageTradingPage() {
             {bottomTab === "history" && (
               <>
                 <div className="grid grid-cols-8 text-[9px] text-[var(--muted)] px-2 py-1.5 bg-[var(--panel-2)] rounded-t">
-                  <span>جفت‌ارز</span><span>جهت</span><span>اهرم</span><span>حجم</span><span>ورود</span><span>خروج</span><span>سود/زیان</span><span>تاریخ</span>
+                  <span>جفت‌ارز</span><span>جهت</span><span>اهرم</span><span>حجم (گرم)</span><span>ورود</span><span>خروج</span><span>سود/زیان</span><span>تاریخ</span>
                 </div>
                 {MOCK_HISTORY.map((h) => (
                   <div key={h.id} className="grid grid-cols-8 items-center text-[10px] px-2 py-2 hover:bg-[var(--panel-2)] border-b border-[var(--border)] transition">
                     <span className="font-bold">{h.pair}</span>
-                    <span className={h.side === "long" ? "text-[var(--green)] font-bold" : "text-[var(--red)] font-bold"}>{h.side === "long" ? "خرید" : "فروش"}</span>
+                    <span className={h.side === "long" ? "text-[var(--green)] font-bold" : "text-[var(--red)] font-bold"}>
+                      {h.side === "long" ? "خرید" : "فروش"}
+                    </span>
                     <span className="bg-[var(--panel)] border border-[var(--border)] rounded px-1 py-0.5 w-fit text-[9px] font-mono">{toFa(String(h.leverage))}x</span>
                     <span className="font-mono">{toFa(h.size.toFixed(3))}</span>
                     <span className="font-mono">{format(h.entry)}</span>
                     <span className="font-mono">{format(h.exit)}</span>
-                    <span className={`font-bold font-mono ${h.pnlGold >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"}`}>{h.pnlGold >= 0 ? "+" : ""}{toFa(h.pnlGold.toFixed(3))}</span>
+                    <span className={`font-bold font-mono ${h.pnlGold >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"}`}>
+                      {h.pnlGold >= 0 ? "+" : ""}{toFa(h.pnlGold.toFixed(3))}
+                    </span>
                     <span className="text-[var(--muted)] font-mono text-[9px]">{h.date}</span>
                   </div>
                 ))}

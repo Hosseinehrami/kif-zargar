@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, ReactNode } from "react";
+import { useEffect, useId, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 // ==========================================
 // Modal پایه
@@ -33,6 +34,10 @@ export function Modal({
   closeOnBackdrop = true,
   showCloseButton = true,
 }: ModalProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+  const modalRef = useFocusTrap<HTMLDivElement>(open);
+
   // Escape key to close
   useEffect(() => {
     if (!open) return;
@@ -64,24 +69,36 @@ export function Modal({
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={closeOnBackdrop ? onClose : undefined}
+        aria-hidden="true"
       />
 
       {/* Modal content */}
       <div
+        ref={modalRef}
         className={`relative w-full ${SIZE_CLASSES[size]} rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl shadow-black/50 overflow-hidden animate-modal-content`}
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descriptionId : undefined}
+        tabIndex={-1}
       >
         {/* Header */}
         {(title || showCloseButton) && (
           <div className="flex items-start justify-between gap-3 p-4 border-b border-[var(--border)]">
             <div className="flex-1 min-w-0">
               {title && (
-                <h2 className="font-bold text-sm text-[var(--text)]">{title}</h2>
+                <h2
+                  id={titleId}
+                  className="font-bold text-sm text-[var(--text)]"
+                >
+                  {title}
+                </h2>
               )}
               {description && (
-                <p className="text-[11px] text-[var(--muted)] mt-1 leading-relaxed">
+                <p
+                  id={descriptionId}
+                  className="text-[11px] text-[var(--muted)] mt-1 leading-relaxed"
+                >
                   {description}
                 </p>
               )}
@@ -92,7 +109,17 @@ export function Modal({
                 className="w-8 h-8 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center justify-center shrink-0 -mt-1 -ml-1"
                 aria-label="بستن"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -168,28 +195,68 @@ const VARIANT_STYLE = {
 
 const VARIANT_ICON = {
   danger: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="10" />
       <line x1="15" y1="9" x2="9" y2="15" />
       <line x1="9" y1="9" x2="15" y2="15" />
     </svg>
   ),
   warning: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   ),
   info: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="16" x2="12" y2="12" />
       <line x1="12" y1="8" x2="12.01" y2="8" />
     </svg>
   ),
   success: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
@@ -207,6 +274,29 @@ export function ConfirmDialog({
   loading = false,
 }: ConfirmDialogProps) {
   const style = VARIANT_STYLE[variant];
+  const titleId = useId();
+  const descriptionId = useId();
+  const dialogRef = useFocusTrap<HTMLDivElement>(open);
+
+  // Escape key to close (disabled while loading)
+  useEffect(() => {
+    if (!open) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !loading) onClose();
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [open, loading, onClose]);
+
+  // Body scroll lock
+  useEffect(() => {
+    if (!open) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -218,22 +308,36 @@ export function ConfirmDialog({
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={loading ? undefined : onClose}
+        aria-hidden="true"
       />
 
       <div
+        ref={dialogRef}
         className="relative w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl shadow-black/50 overflow-hidden animate-modal-content"
-        onClick={(e) => e.stopPropagation()}
         role="alertdialog"
         aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
+        tabIndex={-1}
       >
         <div className="p-5 pb-4">
           <div className="flex flex-col items-center text-center mb-4">
-            <div className={`w-14 h-14 rounded-full ${style.iconBg} ${style.iconBorder} border-2 flex items-center justify-center ${style.icon} mb-3`}>
+            <div
+              className={`w-14 h-14 rounded-full ${style.iconBg} ${style.iconBorder} border-2 flex items-center justify-center ${style.icon} mb-3`}
+            >
               {VARIANT_ICON[variant]}
             </div>
-            <h2 className="text-sm font-bold text-[var(--text)] mb-1">{title}</h2>
+            <h2
+              id={titleId}
+              className="text-sm font-bold text-[var(--text)] mb-1"
+            >
+              {title}
+            </h2>
             {description && (
-              <p className="text-[11px] text-[var(--muted)] leading-relaxed max-w-xs">
+              <p
+                id={descriptionId}
+                className="text-[11px] text-[var(--muted)] leading-relaxed max-w-xs"
+              >
                 {description}
               </p>
             )}
@@ -253,7 +357,10 @@ export function ConfirmDialog({
               className={`flex-1 h-10 rounded-xl text-white text-[11px] font-bold transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${style.confirmBtn}`}
             >
               {loading && (
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span
+                  className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                  aria-hidden="true"
+                />
               )}
               {loading ? "در حال انجام..." : confirmText}
             </button>
