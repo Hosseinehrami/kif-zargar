@@ -1,8 +1,8 @@
 "use client";
 
+import { useToast } from "@/components/ui/Toast";
 import { useState, useEffect } from "react";
-
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
+import { format, toFa } from "@/lib/format";
 
 // ---------- Types ----------
 type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
@@ -101,8 +101,8 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   const map = {
     pending: { label: "در انتظار ارسال", color: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
     shipped: { label: "ارسال شده", color: "bg-sky-500/10 text-sky-400 border-sky-500/30" },
-    delivered: { label: "تحویل شده", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
-    cancelled: { label: "لغو شده", color: "bg-red-500/10 text-red-400 border-red-500/30" },
+    delivered: { label: "تحویل شده", color: "bg-[var(--green)]/10 text-[var(--green)] border-[var(--green)]/30" },
+    cancelled: { label: "لغو شده", color: "bg-[var(--red)]/10 text-[var(--red)] border-[var(--red)]/30" },
   }[status];
   return (
     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${map.color}`}>
@@ -152,45 +152,17 @@ function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void })
         }
       `}</style>
 
-      <div
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto p-2 sm:p-6"
-        onClick={onClose}
-      >
-        <div
-          className="print-invoice relative max-w-md mx-auto text-gray-800 rounded-2xl shadow-2xl overflow-hidden my-2 sm:my-4"
-          style={{ background: "#fdfcf9" }}
-          onClick={e => e.stopPropagation()}
-        >
-          {/* ===== واترمارک — فقط متن، بدون Au ===== */}
-          <div
-            className="absolute inset-0 pointer-events-none select-none overflow-hidden"
-            aria-hidden="true"
-          >
+      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto p-2 sm:p-6" onClick={onClose}>
+        <div className="print-invoice relative max-w-md mx-auto text-gray-800 rounded-2xl shadow-2xl overflow-hidden my-2 sm:my-4" style={{ background: "#fdfcf9" }} onClick={e => e.stopPropagation()}>
+          {/* ===== واترمارک ===== */}
+          <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="font-serif italic font-black whitespace-nowrap -rotate-[22deg]"
-                style={{
-                  fontSize: 84,
-                  letterSpacing: "0.05em",
-                  color: "#a89674",
-                  opacity: 0.04,
-                  lineHeight: 1,
-                }}
-              >
+              <div className="font-serif italic font-black whitespace-nowrap -rotate-[22deg]" style={{ fontSize: 84, letterSpacing: "0.05em", color: "#a89674", opacity: 0.04, lineHeight: 1 }}>
                 KIFE ZARGAR
               </div>
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="font-bold whitespace-nowrap -rotate-[22deg]"
-                style={{
-                  fontSize: 16,
-                  letterSpacing: "0.55em",
-                  color: "#a89674",
-                  opacity: 0.06,
-                  marginTop: 78,
-                }}
-              >
+              <div className="font-bold whitespace-nowrap -rotate-[22deg]" style={{ fontSize: 16, letterSpacing: "0.55em", color: "#a89674", opacity: 0.06, marginTop: 78 }}>
                 کیف زرگر
               </div>
             </div>
@@ -199,39 +171,16 @@ function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void })
           {/* ===== محتوای اصلی ===== */}
           <div className="relative z-10">
             {/* Header */}
-            <div
-              className="relative p-4 sm:p-5 border-b"
-              style={{
-                background: "#f5efe2",
-                borderColor: "#e5dcc4",
-              }}
-            >
+            <div className="relative p-4 sm:p-5 border-b" style={{ background: "#f5efe2", borderColor: "#e5dcc4" }}>
               <div className="relative flex items-start justify-between gap-3">
                 <div>
-                  <div
-                    className="font-black text-lg sm:text-xl font-serif italic tracking-wider"
-                    style={{ color: "#8f7442" }}
-                  >
-                    KIFE ZARGAR
-                  </div>
-                  <div className="text-[11px] text-gray-600 mt-1">
-                    پلتفرم خرید و فروش طلا و جواهر
-                  </div>
-                  <div className="text-[10px] text-gray-500 mt-0.5" dir="ltr">
-                    kifzargar.com
-                  </div>
+                  <div className="font-black text-lg sm:text-xl font-serif italic tracking-wider" style={{ color: "#8f7442" }}>KIFE ZARGAR</div>
+                  <div className="text-[11px] text-gray-600 mt-1">پلتفرم خرید و فروش طلا و جواهر</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5" dir="ltr">kifzargar.com</div>
                 </div>
                 <div className="text-left">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">
-                    فاکتور فروش
-                  </div>
-                  <div
-                    className="text-sm sm:text-base font-bold font-mono mt-1"
-                    style={{ color: "#8f7442" }}
-                    dir="ltr"
-                  >
-                    {order.id}
-                  </div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">فاکتور فروش</div>
+                  <div className="text-sm sm:text-base font-bold font-mono mt-1" style={{ color: "#8f7442" }} dir="ltr">{order.id}</div>
                   <div className="text-[10px] text-gray-500 mt-1">{order.date}</div>
                 </div>
               </div>
@@ -240,12 +189,7 @@ function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void })
             {/* Buyer & Seller */}
             <div className="grid grid-cols-2 gap-4 p-4 border-b" style={{ borderColor: "#ece5d3" }}>
               <div>
-                <div
-                  className="text-[10px] font-bold uppercase tracking-widest mb-1.5 pb-1 border-b"
-                  style={{ color: "#8f7442", borderColor: "#e5dcc4" }}
-                >
-                  خریدار
-                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5 pb-1 border-b" style={{ color: "#8f7442", borderColor: "#e5dcc4" }}>خریدار</div>
                 <div className="space-y-1 text-[11px] leading-relaxed">
                   <div className="font-bold text-gray-900 text-xs">{BUYER.name}</div>
                   <div className="flex justify-between gap-1 text-gray-700">
@@ -256,19 +200,11 @@ function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void })
                     <span className="text-gray-400 text-[10px]">کد ملی</span>
                     <span className="font-mono">{BUYER.nationalId}</span>
                   </div>
-                  <div className="text-gray-500 text-[10px] pt-1 leading-relaxed">
-                    {BUYER.address}
-                  </div>
+                  <div className="text-gray-500 text-[10px] pt-1 leading-relaxed">{BUYER.address}</div>
                 </div>
               </div>
-
               <div>
-                <div
-                  className="text-[10px] font-bold uppercase tracking-widest mb-1.5 pb-1 border-b"
-                  style={{ color: "#8f7442", borderColor: "#e5dcc4" }}
-                >
-                  فروشنده
-                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5 pb-1 border-b" style={{ color: "#8f7442", borderColor: "#e5dcc4" }}>فروشنده</div>
                 <div className="space-y-1 text-[11px] leading-relaxed">
                   <div className="font-bold text-gray-900 text-xs">{order.seller}</div>
                   <div className="flex justify-between gap-1 text-gray-700">
@@ -279,57 +215,38 @@ function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void })
                     <span className="text-gray-400 text-[10px]">شناسه</span>
                     <span className="font-mono">{order.sellerId.toUpperCase()}</span>
                   </div>
-                  <div className="text-gray-500 text-[10px] pt-1 leading-relaxed">
-                    {sellerInfo.address}
-                  </div>
+                  <div className="text-gray-500 text-[10px] pt-1 leading-relaxed">{sellerInfo.address}</div>
                 </div>
               </div>
             </div>
 
             {/* Product Table */}
             <div className="p-4">
-              <div
-                className="grid grid-cols-[1fr_auto_auto] gap-3 pb-2 border-b-2 text-[10px] font-bold uppercase tracking-wider"
-                style={{ color: "#8f7442", borderColor: "#d4c9aa" }}
-              >
+              <div className="grid grid-cols-[1fr_auto_auto] gap-3 pb-2 border-b-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: "#8f7442", borderColor: "#d4c9aa" }}>
                 <div>شرح کالا</div>
                 <div className="text-center w-12">تعداد</div>
                 <div className="text-left w-28">مبلغ (تومان)</div>
               </div>
-              <div
-                className="grid grid-cols-[1fr_auto_auto] gap-3 py-3 border-b items-center"
-                style={{ borderColor: "#ece5d3" }}
-              >
+              <div className="grid grid-cols-[1fr_auto_auto] gap-3 py-3 border-b items-center" style={{ borderColor: "#ece5d3" }}>
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0 border"
-                    style={{ background: "#faf6ec", borderColor: "#e5dcc4" }}
-                  >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0 border" style={{ background: "#faf6ec", borderColor: "#e5dcc4" }}>
                     {order.productIcon}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[12px] font-bold text-gray-900 truncate">
-                      {order.productTitle}
-                    </div>
-                    <div className="text-[10px] text-gray-500 mt-0.5">
-                      {order.seller}
-                    </div>
+                    <div className="text-[12px] font-bold text-gray-900 truncate">{order.productTitle}</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">{order.seller}</div>
                   </div>
                 </div>
-                <div className="text-center text-[12px] font-bold w-12">
-                  {format(order.quantity)}
-                </div>
-                <div className="text-left text-[12px] font-bold w-28">
-                  {format(order.price)}
-                </div>
+                <div className="text-center text-[12px] font-bold w-12 font-mono">{toFa(String(order.quantity))}</div>
+                <div className="text-left text-[12px] font-bold w-28 font-mono">{format(order.price)}</div>
               </div>
             </div>
 
-            {/* Summary — شفاف‌تر */}
+            {/* Summary */}
             <div className="px-4 pb-4 space-y-1">
               <div className="flex justify-between text-[11px] py-1">
                 <span className="text-gray-500">جمع کالا و خدمات</span>
-                <span className="font-semibold text-gray-800">{format(order.price)} تومان</span>
+                <span className="font-semibold text-gray-800 font-mono">{format(order.price)} تومان</span>
               </div>
               <div className="flex justify-between text-[11px] py-1">
                 <span className="text-gray-500">مالیات بر ارزش افزوده</span>
@@ -341,71 +258,37 @@ function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void })
               </div>
               <div className="flex justify-between text-[11px] py-1 pb-2.5 border-b" style={{ borderColor: "#e5dcc4" }}>
                 <span className="text-gray-500">روش پرداخت</span>
-                <span className="font-semibold text-gray-800">
-                  {order.paymentMethod === "gold" ? "کیف پول طلایی" : "کیف پول ریالی"}
-                </span>
+                <span className="font-semibold text-gray-800">{order.paymentMethod === "gold" ? "کیف پول طلایی" : "کیف پول ریالی"}</span>
               </div>
 
-              {/* Final Price — بلوک برجسته */}
-              <div
-                className="mt-2 rounded-xl p-3 flex justify-between items-center border"
-                style={{
-                  background: "#f5efe2",
-                  borderColor: "#d4c9aa",
-                }}
-              >
+              <div className="mt-2 rounded-xl p-3 flex justify-between items-center border" style={{ background: "#f5efe2", borderColor: "#d4c9aa" }}>
                 <span className="text-[12px] font-bold text-gray-800">مبلغ نهایی</span>
-                <span className="text-lg font-black" style={{ color: "#7a6134" }}>
+                <span className="text-lg font-black font-mono" style={{ color: "#7a6134" }}>
                   {format(order.price)}
-                  <span className="text-[10px] font-normal text-gray-500 mr-1">تومان</span>
+                  <span className="text-[10px] font-normal text-gray-500 mr-1 font-sans">تومان</span>
                 </span>
               </div>
             </div>
 
             {/* Footer + seal */}
-            <div
-              className="px-4 pb-3 flex items-end justify-between gap-3 border-t pt-3"
-              style={{ borderColor: "#ece5d3" }}
-            >
+            <div className="px-4 pb-3 flex items-end justify-between gap-3 border-t pt-3" style={{ borderColor: "#ece5d3" }}>
               <div className="flex-1 text-[10px] text-gray-500 leading-relaxed">
                 این فاکتور به صورت الکترونیکی صادر شده و بدون نیاز به مهر فیزیکی معتبر است.
-                <div className="mt-1 font-mono text-[9px] text-gray-400" dir="ltr">
-                  support@kifzargar.com | 021-91000000
-                </div>
+                <div className="mt-1 font-mono text-[9px] text-gray-400" dir="ltr">support@kifzargar.com | 021-91000000</div>
               </div>
-              <div
-                className="w-16 h-16 rounded-full flex flex-col items-center justify-center text-center shrink-0 rotate-[-10deg] border border-dashed"
-                style={{ borderColor: "#d4c9aa", background: "transparent" }}
-              >
-                <div className="text-[7px] font-black leading-tight" style={{ color: "#a89674" }}>
-                  KIFE
-                </div>
-                <div className="text-[7px] font-black leading-tight" style={{ color: "#a89674" }}>
-                  ZARGAR
-                </div>
-                <div className="text-[6px] font-bold mt-0.5 leading-tight" style={{ color: "#a89674" }}>
-                  مهر الکترونیکی
-                </div>
+              <div className="w-16 h-16 rounded-full flex flex-col items-center justify-center text-center shrink-0 rotate-[-10deg] border border-dashed" style={{ borderColor: "#d4c9aa", background: "transparent" }}>
+                <div className="text-[7px] font-black leading-tight" style={{ color: "#a89674" }}>KIFE</div>
+                <div className="text-[7px] font-black leading-tight" style={{ color: "#a89674" }}>ZARGAR</div>
+                <div className="text-[6px] font-bold mt-0.5 leading-tight" style={{ color: "#a89674" }}>مهر الکترونیکی</div>
               </div>
             </div>
 
             {/* Actions */}
-            <div
-              className="no-print p-2.5 flex gap-2 border-t"
-              style={{ background: "#f5efe2", borderColor: "#e5dcc4" }}
-            >
-              <button
-                onClick={() => window.print()}
-                className="flex-1 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm hover:shadow"
-                style={{ background: "#8f7442" }}
-              >
+            <div className="no-print p-2.5 flex gap-2 border-t" style={{ background: "#f5efe2", borderColor: "#e5dcc4" }}>
+              <button onClick={() => window.print()} className="flex-1 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm hover:shadow" style={{ background: "#8f7442" }}>
                 🖨️ چاپ / دانلود PDF
               </button>
-              <button
-                onClick={onClose}
-                className="px-5 bg-white border text-gray-700 text-xs font-bold py-2.5 rounded-lg transition hover:bg-gray-50"
-                style={{ borderColor: "#d4c9aa" }}
-              >
+              <button onClick={onClose} className="px-5 bg-white border text-gray-700 text-xs font-bold py-2.5 rounded-lg transition hover:bg-gray-50" style={{ borderColor: "#d4c9aa" }}>
                 بستن
               </button>
             </div>
@@ -455,7 +338,7 @@ function ReviewModal({ order, onClose, onSubmit }: { order: Order; onClose: () =
 
         {submitted ? (
           <div className="text-center py-6">
-            <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><CheckIcon /></div>
+            <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-[var(--green)]/20 text-[var(--green)] flex items-center justify-center"><CheckIcon /></div>
             <div className="text-sm font-bold mb-1">نظر شما ثبت شد</div>
             <div className="text-[11px] text-[var(--muted)]">با تشکر از مشارکت شما</div>
           </div>
@@ -495,6 +378,7 @@ export default function OrdersPage() {
   const [tab, setTab] = useState<"all" | "current" | "delivered" | "cancelled">("all");
   const [reviewing, setReviewing] = useState<Order | null>(null);
   const [invoicing, setInvoicing] = useState<Order | null>(null);
+  const toast = useToast();
 
   const filtered = orders.filter(o => {
     if (tab === "all") return true;
@@ -503,14 +387,15 @@ export default function OrdersPage() {
     return o.status === "cancelled";
   });
 
-  function handleReviewSubmit(review: Review) {
+    function handleReviewSubmit(review: Review) {
     if (!reviewing) return;
     setOrders(prev => prev.map(o => o.id === reviewing.id ? { ...o, hasReview: true } : o));
-    console.log("Review submitted:", { order: reviewing.id, ...review });
+
+    toast.success("نظر شما با موفقیت ثبت شد");
   }
 
   return (
-    <div className="px-2.5 sm:px-4 pt-3 pb-8">
+    <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
       <div className="mb-4">
         <h1 className="font-bold text-lg sm:text-xl mb-1">سفارشات من</h1>
         <p className="text-[11px] text-[var(--muted)]">پیگیری و مدیریت خریدهای شما</p>
@@ -523,13 +408,11 @@ export default function OrdersPage() {
           { id: "delivered", label: "تحویل شده" },
           { id: "cancelled", label: "لغو شده" },
         ] as const).map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-3.5 py-2 text-xs font-bold whitespace-nowrap -mb-px border-b-2 transition-colors ${tab === t.id ? "text-[var(--gold)] border-[var(--gold)]" : "text-[var(--muted)] border-transparent hover:text-[var(--text)]"}`}
-          >
+          <button key={t.id} onClick={() => setTab(t.id)} className={`px-3.5 py-2 text-xs font-bold whitespace-nowrap -mb-px border-b-2 transition-colors ${tab === t.id ? "text-[var(--gold)] border-[var(--gold)]" : "text-[var(--muted)] border-transparent hover:text-[var(--text)]"}`}>
             {t.label}
             {t.id === "delivered" && (
-              <span className="ml-1 text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 rounded-full">
-                {orders.filter(o => o.status === "delivered" && !o.hasReview).length}
+              <span className="ml-1 text-[9px] bg-[var(--green)]/20 text-[var(--green)] px-1.5 rounded-full font-mono">
+                {toFa(String(orders.filter(o => o.status === "delivered" && !o.hasReview).length))}
               </span>
             )}
           </button>
@@ -560,11 +443,11 @@ export default function OrdersPage() {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs sm:text-sm font-bold truncate">{o.productTitle}</div>
                   <div className="text-[10px] text-[var(--muted)] mt-0.5">فروشنده: {o.seller}</div>
-                  <div className="text-[10px] text-[var(--muted)] mt-0.5">تعداد: {format(o.quantity)}</div>
+                  <div className="text-[10px] text-[var(--muted)] mt-0.5 font-mono">تعداد: {toFa(String(o.quantity))}</div>
                 </div>
                 <div className="text-left shrink-0">
-                  <div className="text-xs sm:text-sm font-bold text-[var(--gold)]">{format(o.price)}</div>
-                  <div className="text-[9px] text-[var(--muted)]">تومان</div>
+                  <div className="text-xs sm:text-sm font-bold text-[var(--gold)] font-mono">{format(o.price)}</div>
+                  <div className="text-[9px] text-[var(--muted)] font-sans">تومان</div>
                 </div>
               </div>
 
@@ -576,7 +459,7 @@ export default function OrdersPage() {
                   </button>
                 )}
                 {o.status === "delivered" && o.hasReview && (
-                  <div className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2 rounded-lg">
+                  <div className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-xs text-[var(--green)] bg-[var(--green)]/10 border border-[var(--green)]/30 px-4 py-2 rounded-lg font-bold">
                     <CheckIcon /> نظر شما ثبت شد
                   </div>
                 )}

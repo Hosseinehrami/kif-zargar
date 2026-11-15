@@ -3,18 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { format, toFa, toEnDigits } from "@/lib/format";
+import { SETTINGS } from "@/lib/settings";
 
-const GOLD_PRICE = 19_080_000;
 const MIN_TRANSFER = 0.01;
 const MIN_NOTE_LENGTH = 10;
 const FEE_RATE = 0.001;
 const GOLD_BALANCE = 12.45;
-
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
-const toEnDigits = (s: string) =>
-  s.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
-const toFa = (s: string) =>
-  s.replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[+d]).replace(/\./g, "٫");
 
 const MOCK_USERS: Record<string, { name: string; phone: string; avatar: string }> = {
   "09121234567": { name: "علی رضایی", phone: "09121234567", avatar: "ع" },
@@ -78,6 +73,7 @@ type Step = "form" | "otp" | "success";
 export default function TransferPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const goldPrice = SETTINGS.fees.goldPrice;
 
   const [step, setStep] = useState<Step>("form");
   const [recipient, setRecipient] = useState("");
@@ -244,7 +240,7 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
 
   return (
     <>
-      <div className="px-2.5 sm:px-4 pt-3 pb-8">
+      <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
         <div className="flex items-center gap-2 mb-4">
           <button
             type="button"
@@ -266,15 +262,15 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[10px] text-[var(--muted)] mb-0.5">موجودی طلای شما</div>
-              <div className="text-lg font-black text-[var(--gold)]">
+              <div className="text-lg font-black text-[var(--gold)] font-mono">
                 {toFa(GOLD_BALANCE.toFixed(3))}
-                <span className="text-[10px] font-normal text-[var(--muted)] mr-1">گرم</span>
+                <span className="text-[10px] font-normal text-[var(--muted)] mr-1 font-sans">گرم</span>
               </div>
             </div>
             <div className="text-left">
               <div className="text-[9.5px] text-[var(--muted)]">معادل</div>
-              <div className="text-[11px] font-bold text-[var(--text)]">{format(GOLD_BALANCE * GOLD_PRICE)}</div>
-              <div className="text-[9px] text-[var(--muted)]">تومان</div>
+              <div className="text-[11px] font-bold text-[var(--text)] font-mono">{format(GOLD_BALANCE * goldPrice)}</div>
+              <div className="text-[9px] text-[var(--muted)] font-sans">تومان</div>
             </div>
           </div>
         </div>
@@ -286,9 +282,9 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
               <div
                 className={`flex items-center gap-2 rounded-xl border-2 bg-[var(--bg)] px-3 py-2.5 transition-all ${
                   recipientError
-                    ? "border-red-500/50"
+                    ? "border-[var(--red)]/50"
                     : recipientData
-                    ? "border-emerald-500/50"
+                    ? "border-[var(--green)]/50"
                     : "border-[var(--border)] focus-within:border-[var(--gold)]"
                 }`}
               >
@@ -300,31 +296,31 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
                   value={recipient}
                   onChange={handleRecipientChange}
                   placeholder="9121234567"
-                  className="flex-1 min-w-0 bg-transparent outline-none text-sm font-bold tracking-wider text-left text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal"
+                  className="flex-1 min-w-0 bg-transparent outline-none text-sm font-bold font-mono tracking-wider text-left text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal"
                   dir="ltr"
                   autoFocus
                 />
                 {recipientData && (
-                  <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                  <span className="w-4 h-4 rounded-full bg-[var(--green)] flex items-center justify-center shrink-0">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </span>
                 )}
               </div>
-              {recipientError && <p className="text-[10px] text-red-400 mt-1.5">{recipientError}</p>}
+              {recipientError && <p className="text-[10px] text-[var(--red)] mt-1.5">{recipientError}</p>}
               {!recipient && <p className="text-[9.5px] text-[var(--muted)] mt-1.5">مثال: 09121234567</p>}
 
               {recipientData && (
-                <div className="mt-3 p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-2.5 fade-in">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-base font-bold text-emerald-400 shrink-0">
+                <div className="mt-3 p-2.5 rounded-xl bg-[var(--green)]/5 border border-[var(--green)]/20 flex items-center gap-2.5 fade-in">
+                  <div className="w-10 h-10 rounded-full bg-[var(--green)]/20 border border-[var(--green)]/30 flex items-center justify-center text-base font-bold text-[var(--green)] shrink-0">
                     {recipientData.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[11px] font-bold text-[var(--text)]">{recipientData.name}</div>
                     <div className="text-[9.5px] text-[var(--muted)] font-mono mt-0.5" dir="ltr">{recipientData.phone}</div>
                   </div>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[var(--green)]" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
@@ -345,9 +341,9 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
               <div
                 className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${
                   amount && !enoughBalance
-                    ? "border-red-500/50"
+                    ? "border-[var(--red)]/50"
                     : amount && amountNum >= MIN_TRANSFER
-                    ? "border-emerald-500/50"
+                    ? "border-[var(--green)]/50"
                     : "border-[var(--border)] focus-within:border-[var(--gold)]"
                 }`}
               >
@@ -357,37 +353,37 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
                   value={amount}
                   onChange={e => setAmount(toEnDigits(e.target.value).replace(/[^\d.]/g, ""))}
                   placeholder="۰.۰۰۰"
-                  className="w-full bg-transparent text-center text-lg font-black text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
+                  className="w-full bg-transparent text-center text-lg font-black font-mono text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
                   dir="ltr"
                 />
               </div>
               {amount && amountNum > 0 && (
                 <div className="text-[10px] text-center text-[var(--muted)] mt-1.5">
-                  معادل {format(amountNum * GOLD_PRICE)} تومان
+                  معادل <span className="font-mono font-bold">{format(amountNum * goldPrice)}</span> تومان
                 </div>
               )}
               {amountNum > 0 && amountNum < MIN_TRANSFER && (
-                <p className="text-[10px] text-red-400 mt-1.5 text-center">
+                <p className="text-[10px] text-[var(--red)] mt-1.5 text-center font-mono">
                   حداقل مقدار انتقال {toFa(String(MIN_TRANSFER))} گرم است
                 </p>
               )}
               {!enoughBalance && (
-                <p className="text-[10px] text-red-400 mt-1.5 text-center">موجودی کافی نیست (شامل کارمزد)</p>
+                <p className="text-[10px] text-[var(--red)] mt-1.5 text-center">موجودی کافی نیست (شامل کارمزد)</p>
               )}
 
               {amountNum > 0 && amountNum >= MIN_TRANSFER && enoughBalance && (
                 <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-1.5 text-[11px] fade-in">
                   <div className="flex justify-between">
                     <span className="text-[var(--muted)]">گیرنده دریافت می‌کند</span>
-                    <span className="font-bold text-emerald-400">{toFa(amountNum.toFixed(4))} گرم</span>
+                    <span className="font-bold text-[var(--green)] font-mono">{toFa(amountNum.toFixed(4))} گرم</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[var(--muted)]">کارمزد (۰.۱٪)</span>
-                    <span className="text-red-400">+{toFa(fee.toFixed(4))} گرم</span>
+                    <span className="text-[var(--red)] font-mono">+{toFa(fee.toFixed(4))} گرم</span>
                   </div>
                   <div className="flex justify-between pt-1.5 border-t border-[var(--border)]">
                     <span className="text-[var(--text)] font-bold">کل کسر از حساب شما</span>
-                    <span className="font-bold text-[var(--gold)]">{toFa(totalFromSender.toFixed(4))} گرم</span>
+                    <span className="font-bold text-[var(--gold)] font-mono">{toFa(totalFromSender.toFixed(4))} گرم</span>
                   </div>
                 </div>
               )}
@@ -396,9 +392,9 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-[10px] text-[var(--muted)]">
-                  توضیحات <span className="text-red-400">*</span>
+                  توضیحات <span className="text-[var(--red)]">*</span>
                 </label>
-                <span className={`text-[10px] font-bold ${noteValid ? "text-emerald-400" : "text-amber-400"}`}>
+                <span className={`text-[10px] font-bold font-mono ${noteValid ? "text-[var(--green)]" : "text-amber-400"}`}>
                   {toFa(String(noteLength))}/{toFa(String(MIN_NOTE_LENGTH))}
                 </span>
               </div>
@@ -411,12 +407,12 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
                   noteLength > 0 && !noteValid
                     ? "border-amber-500/50"
                     : noteValid
-                    ? "border-emerald-500/50"
+                    ? "border-[var(--green)]/50"
                     : "border-[var(--border)] focus:border-[var(--gold)]"
                 }`}
               />
               {noteLength > 0 && !noteValid && (
-                <p className="text-[9.5px] text-amber-400 mt-1">
+                <p className="text-[9.5px] text-amber-400 mt-1 font-mono">
                   {toFa(String(MIN_NOTE_LENGTH - noteLength))} کاراکتر دیگر وارد کنید
                 </p>
               )}
@@ -464,17 +460,17 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
 
                 <div className="flex justify-between pt-2 border-t border-[var(--gold)]/20">
                   <span className="text-[var(--muted)]">مقدار انتقال</span>
-                  <span className="font-bold text-emerald-400">{toFa(amountNum.toFixed(4))} گرم</span>
+                  <span className="font-bold text-[var(--green)] font-mono">{toFa(amountNum.toFixed(4))} گرم</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-[var(--muted)]">کارمزد</span>
-                  <span className="text-red-400">+{toFa(fee.toFixed(4))} گرم</span>
+                  <span className="text-[var(--red)] font-mono">+{toFa(fee.toFixed(4))} گرم</span>
                 </div>
 
                 <div className="flex justify-between pt-2 border-t border-[var(--gold)]/20">
                   <span className="text-[var(--text)] font-bold">کل کسر از حساب شما</span>
-                  <span className="font-black text-[var(--gold)]">{toFa(totalFromSender.toFixed(4))} گرم</span>
+                  <span className="font-black text-[var(--gold)] font-mono">{toFa(totalFromSender.toFixed(4))} گرم</span>
                 </div>
 
                 {note.trim() && (
@@ -500,9 +496,9 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
                   onKeyDown={e => handleOtpBackspace(i, e)}
                   disabled={otpVerifying}
                   autoFocus={i === 0}
-                  className={`w-14 h-16 text-center text-2xl font-black rounded-xl border-2 outline-none transition-all ${
+                  className={`w-14 h-16 text-center text-2xl font-black font-mono rounded-xl border-2 outline-none transition-all ${
                     otpError
-                      ? "border-red-500 text-red-400"
+                      ? "border-[var(--red)] text-[var(--red)]"
                       : d
                       ? "border-[var(--gold)] text-[var(--gold)] bg-[var(--gold)]/10"
                       : "border-[var(--border)] text-[var(--text)] bg-[var(--bg)] focus:border-[var(--gold)]"
@@ -511,7 +507,7 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
               ))}
             </div>
 
-            {otpError && <p className="text-[10px] text-red-400 text-center mb-3">{otpError}</p>}
+            {otpError && <p className="text-[10px] text-[var(--red)] text-center mb-3">{otpError}</p>}
 
             <div className="text-[9.5px] text-[var(--muted)] text-center mb-3 bg-[var(--panel-2)] rounded-lg p-2">
               🔒 دمو: کد <span className="font-mono font-bold text-[var(--gold)]">1234</span> را وارد کنید
@@ -555,11 +551,11 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
 
         {step === "success" && transaction && (
           <div className="space-y-3">
-            <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent p-5 text-center">
+            <div className="rounded-2xl border border-[var(--green)]/30 bg-gradient-to-br from-[var(--green)]/10 to-transparent p-5 text-center">
               <div className="relative inline-block mb-3">
-                <div className="absolute inset-0 bg-emerald-500 opacity-30 rounded-full blur-xl animate-pulse" />
-                <div className="relative w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <div className="absolute inset-0 bg-[var(--green)] opacity-30 rounded-full blur-xl animate-pulse" />
+                <div className="relative w-16 h-16 rounded-full bg-[var(--green)]/20 border-2 border-[var(--green)] flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[var(--green)]" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
@@ -587,10 +583,10 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
                 </div>
                 <div className="text-left">
                   <div className="flex items-center gap-1 justify-end">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[var(--green)]" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
-                    <span className="text-[8.5px] text-emerald-400 font-bold">امضای دیجیتال معتبر</span>
+                    <span className="text-[8.5px] text-[var(--green)] font-bold">امضای دیجیتال معتبر</span>
                   </div>
                   <div className="text-[8px] text-[var(--muted)] mt-0.5 font-mono">{transaction.trackingCode}</div>
                 </div>
@@ -598,12 +594,12 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
 
               <div className="relative p-4 text-center border-b border-[var(--border)] bg-[var(--gold)]/5">
                 <div className="text-[10px] text-[var(--muted)] mb-1">مقدار منتقل شده</div>
-                <div className="text-3xl font-black text-[var(--gold)]">
+                <div className="text-3xl font-black text-[var(--gold)] font-mono">
                   {toFa(transaction.amount.toFixed(4))}
-                  <span className="text-sm font-normal text-[var(--muted)] mr-1">گرم</span>
+                  <span className="text-sm font-normal text-[var(--muted)] mr-1 font-sans">گرم</span>
                 </div>
                 <div className="text-[10px] text-[var(--muted)] mt-1">
-                  معادل {format(transaction.amount * GOLD_PRICE)} تومان
+                  معادل <span className="font-mono font-bold">{format(transaction.amount * goldPrice)}</span> تومان
                 </div>
               </div>
 
@@ -618,7 +614,7 @@ ${transaction.note ? `توضیحات: ${transaction.note}\n` : ""}
 
                 <div className="flex justify-between">
                   <span className="text-[var(--muted)]">کارمزد</span>
-                  <span className="text-red-400">{toFa(transaction.fee.toFixed(4))} گرم</span>
+                  <span className="text-[var(--red)] font-mono">{toFa(transaction.fee.toFixed(4))} گرم</span>
                 </div>
 
                 <div className="flex justify-between pt-2 border-t border-[var(--border)]">

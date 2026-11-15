@@ -3,16 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { format, toFa } from "@/lib/format";
+import { SETTINGS } from "@/lib/settings";
+import { useToast } from "@/components/ui/Toast";
 import TradeInvoice, { type TradeInvoiceData } from "@/components/TradeInvoice";
 import TransferReceipt, { type TransferReceiptData } from "@/components/TransferReceipt";
 import AddCardModal, { type BankCard } from "@/components/AddCardModal";
 import DeleteCardModal from "@/components/DeleteCardModal";
 
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
-const toFa = (s: string) =>
-  s.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[+d]).replace(/\./g, "٫");
-
-// نمایش مقدار بر اساس نوع (طلا با اعشار، ریال با کاما)
 const displayAmount = (amount: number, type: "rial" | "gold") => {
   if (type === "gold") return toFa(amount.toFixed(3));
   return format(amount);
@@ -21,7 +19,6 @@ const displayAmount = (amount: number, type: "rial" | "gold") => {
 const WALLET_DATA = {
   cashBalance: 171_274_000,
   goldBalance: 12.450,
-  goldValue: 237_546_000,
   depositId: "84721938",
 };
 
@@ -40,7 +37,7 @@ type Transaction = {
   title: string;
   date: string;
   time: string;
-  amount: number;                    // ← عدد خالص
+  amount: number;
   amountType: "rial" | "gold";
   positive: boolean;
   status: TxStatus;
@@ -71,10 +68,10 @@ const TRANSACTIONS: Transaction[] = [
       symbolName: "طلای ۱۸ عیار",
       unit: "گرم",
       amount: 2.5,
-      price: 19_080_000,
-      total: 47_700_000,
-      fee: 477_000,
-      finalAmount: 48_177_000,
+      price: SETTINGS.fees.goldPrice,
+      total: 2.5 * SETTINGS.fees.goldPrice,
+      fee: 2.5 * SETTINGS.fees.goldPrice * 0.01,
+      finalAmount: (2.5 * SETTINGS.fees.goldPrice) * 1.01,
       paymentMethod: "rial",
       buyer: BUYER_INFO,
     },
@@ -107,10 +104,10 @@ const TRANSACTIONS: Transaction[] = [
       symbolName: "طلای ۱۸ عیار",
       unit: "گرم",
       amount: 1.2,
-      price: 19_050_000,
-      total: 22_860_000,
-      fee: 228_600,
-      finalAmount: 22_631_400,
+      price: SETTINGS.fees.goldPrice - 30_000,
+      total: 1.2 * (SETTINGS.fees.goldPrice - 30_000),
+      fee: 1.2 * (SETTINGS.fees.goldPrice - 30_000) * 0.01,
+      finalAmount: (1.2 * (SETTINGS.fees.goldPrice - 30_000)) * 0.99,
       paymentMethod: "rial",
       buyer: BUYER_INFO,
     },
@@ -134,26 +131,26 @@ const TRANSACTIONS: Transaction[] = [
 ];
 
 const ICONS = {
-  deposit: { icon: "↙", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  withdraw: { icon: "↗", color: "text-red-400", bg: "bg-red-500/10" },
+  deposit: { icon: "↙", color: "text-[var(--green)]", bg: "bg-[var(--green)]/10" },
+  withdraw: { icon: "↗", color: "text-[var(--red)]", bg: "bg-[var(--red)]/10" },
   transfer: { icon: "⇄", color: "text-violet-400", bg: "bg-violet-500/10" },
   buy: { icon: "↓", color: "text-sky-400", bg: "bg-sky-500/10" },
   sell: { icon: "↑", color: "text-amber-400", bg: "bg-amber-500/10" },
 };
 
 const STATUS_STYLE = {
-  success: { label: "موفق", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+  success: { label: "موفق", color: "text-[var(--green)] bg-[var(--green)]/10 border-[var(--green)]/30" },
   pending: { label: "در انتظار", color: "text-amber-400 bg-amber-500/10 border-amber-500/30" },
-  rejected: { label: "رد شده", color: "text-red-400 bg-red-500/10 border-red-500/30" },
+  rejected: { label: "رد شده", color: "text-[var(--red)] bg-[var(--red)]/10 border-[var(--red)]/30" },
 };
 
 const SHAREABLE_TYPES: TxType[] = ["deposit", "withdraw"];
-
 type Filter = "all" | "deposit" | "withdraw" | "transfer" | "trade";
 
 export default function WalletPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const toast = useToast();
   const [hideBalance, setHideBalance] = useState(false);
   const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
@@ -161,6 +158,7 @@ export default function WalletPage() {
   const [sharedTx, setSharedTx] = useState<string | null>(null);
   const [invoiceTx, setInvoiceTx] = useState<TradeInvoiceData | null>(null);
   const [transferReceipt, setTransferReceipt] = useState<TransferReceiptData | null>(null);
+  
   const [bankCards, setBankCards] = useState<BankCard[]>([
     { id: "card1", bank: "بانک ملی ایران", last4: "4589", iban: "IR820170000000123456789012", cardNumber: "6104337845891234", isDefault: true },
     { id: "card2", bank: "بانک سامان", last4: "7823", iban: "IR980560000000987654321098", cardNumber: "6219861778235678", isDefault: false },
@@ -171,9 +169,13 @@ export default function WalletPage() {
   const walletAddress = WALLET_DATA.depositId;
   const formattedId = `${walletAddress.slice(0, 4)}-${walletAddress.slice(4, 8)}`;
 
+  const goldValue = WALLET_DATA.goldBalance * SETTINGS.fees.goldPrice;
+  const totalBalance = WALLET_DATA.cashBalance + goldValue;
+
   function handleCopy() {
     navigator.clipboard.writeText(walletAddress);
     setCopied(true);
+    toast.success("شناسه واریز کپی شد");
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -192,9 +194,12 @@ export default function WalletPage() {
       } else {
         await navigator.clipboard.writeText(text);
         setSharedTx(tx.id);
+        toast.success("رسید کپی شد");
         setTimeout(() => setSharedTx(null), 2000);
       }
-    } catch {}
+    } catch {
+      toast.error("اشتراک‌گذاری انجام نشد");
+    }
   }
 
   function openTransferReceipt(tx: Transaction) {
@@ -205,7 +210,7 @@ export default function WalletPage() {
       trackingCode: tx.trackingCode,
       date: tx.date,
       time: tx.time,
-      amount: tx.amount,                    // ← حالا مستقیماً عدد
+      amount: tx.amount,
       unit: tx.amountType === "gold" ? "گرم" : "تومان",
       fee: tx.fee || 0,
       recipientName: tx.recipientName,
@@ -226,21 +231,24 @@ export default function WalletPage() {
   const visibleTx = showAllTx ? filteredTx : filteredTx.slice(0, 4);
 
   return (
-    <div className="px-2.5 sm:px-4 pt-3 pb-8">
+    <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
+
+      {/* هدر */}
       <div className="mb-4">
         <h1 className="font-bold text-lg sm:text-xl mb-1">کیف پول</h1>
         <p className="text-[11px] text-[var(--muted)]">مدیریت دارایی‌ها و تراکنش‌های مالی</p>
       </div>
 
+      {/* کارت موجودی */}
       <section className="relative rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--panel)] via-[var(--panel)] to-[var(--gold)]/5 p-4 mb-3 overflow-hidden">
         <div className="absolute -top-16 -left-16 w-48 h-48 bg-[var(--gold)] opacity-[0.08] rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="text-[10px] text-[var(--muted)] mb-1">موجودی کل</div>
-              <div className="text-2xl sm:text-3xl font-black text-[var(--text)] tracking-tight">
-                {hideBalance ? "••••••" : format(WALLET_DATA.cashBalance + WALLET_DATA.goldValue)}
-                <span className="text-[11px] font-normal text-[var(--muted)] mr-1.5">تومان</span>
+              <div className="text-2xl sm:text-3xl font-black text-[var(--text)] tracking-tight font-mono">
+                {hideBalance ? "••••••" : format(totalBalance)}
+                <span className="text-[11px] font-normal text-[var(--muted)] mr-1.5 font-sans">تومان</span>
               </div>
             </div>
             <button
@@ -268,20 +276,20 @@ export default function WalletPage() {
                 <span className="text-[10px]">💵</span>
                 <span className="text-[9.5px] text-[var(--muted)]">موجودی ریالی</span>
               </div>
-              <div className="text-sm font-bold text-[var(--text)]">
+              <div className="text-sm font-bold text-[var(--text)] font-mono">
                 {hideBalance ? "••••" : format(WALLET_DATA.cashBalance)}
               </div>
-              <div className="text-[9px] text-[var(--muted)] mt-0.5">تومان</div>
+              <div className="text-[9px] text-[var(--muted)] mt-0.5 font-sans">تومان</div>
             </div>
             <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
               <div className="flex items-center gap-1 mb-1">
                 <span className="text-[10px]">🪙</span>
                 <span className="text-[9.5px] text-[var(--muted)]">موجودی طلا</span>
               </div>
-              <div className="text-sm font-bold text-[var(--gold)]">
+              <div className="text-sm font-bold text-[var(--gold)] font-mono">
                 {hideBalance ? "••••" : WALLET_DATA.goldBalance.toFixed(3)}
               </div>
-              <div className="text-[9px] text-[var(--muted)] mt-0.5">گرم</div>
+              <div className="text-[9px] text-[var(--muted)] mt-0.5 font-sans">گرم</div>
             </div>
           </div>
 
@@ -295,7 +303,7 @@ export default function WalletPage() {
             <button
               onClick={handleCopy}
               className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
-                copied ? "bg-emerald-500/20 text-emerald-400" : "bg-[var(--gold)]/15 text-[var(--gold)] hover:bg-[var(--gold)]/25"
+                copied ? "bg-[var(--green)]/20 text-[var(--green)]" : "bg-[var(--gold)]/15 text-[var(--gold)] hover:bg-[var(--gold)]/25"
               }`}
               aria-label="کپی"
             >
@@ -314,9 +322,10 @@ export default function WalletPage() {
         </div>
       </section>
 
+      {/* دکمه‌های عملیات */}
       <section className="grid grid-cols-4 gap-2 mb-5">
         <button onClick={() => router.push("/wallet/deposit")} className="flex flex-col items-center gap-1.5 rounded-xl bg-[var(--panel)] border border-[var(--border)] py-3 hover:border-[var(--gold)]/50 transition group">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition">
+          <div className="w-9 h-9 rounded-lg bg-[var(--green)]/10 text-[var(--green)] flex items-center justify-center group-hover:scale-110 transition">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M4 21h16" />
             </svg>
@@ -324,7 +333,7 @@ export default function WalletPage() {
           <span className="text-[10px] font-bold text-[var(--text)]">واریز</span>
         </button>
         <button onClick={() => router.push("/wallet/withdraw")} className="flex flex-col items-center gap-1.5 rounded-xl bg-[var(--panel)] border border-[var(--border)] py-3 hover:border-[var(--gold)]/50 transition group">
-          <div className="w-9 h-9 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center group-hover:scale-110 transition">
+          <div className="w-9 h-9 rounded-lg bg-[var(--red)]/10 text-[var(--red)] flex items-center justify-center group-hover:scale-110 transition">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 21V9" /><path d="M17 14l-5-5-5 5" /><path d="M4 3h16" />
             </svg>
@@ -350,6 +359,7 @@ export default function WalletPage() {
         </button>
       </section>
 
+      {/* کارت‌های بانکی */}
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 mb-3">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -357,7 +367,7 @@ export default function WalletPage() {
               <span>🏦</span>
               کارت‌های بانکی
             </h2>
-            <p className="text-[10px] text-[var(--muted)] mt-0.5">{bankCards.length} کارت ثبت شده</p>
+            <p className="text-[10px] text-[var(--muted)] mt-0.5 font-mono">{toFa(String(bankCards.length))} کارت ثبت شده</p>
           </div>
           <button
             type="button"
@@ -384,7 +394,7 @@ export default function WalletPage() {
               <button
                 type="button"
                 onClick={() => setDeleteCard(card)}
-                className="w-7 h-7 rounded-md text-[var(--muted)] hover:text-red-400 hover:bg-red-500/10 transition flex items-center justify-center shrink-0"
+                className="w-7 h-7 rounded-md text-[var(--muted)] hover:text-[var(--red)] hover:bg-[var(--red)]/10 transition flex items-center justify-center shrink-0"
                 aria-label="حذف"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -398,11 +408,12 @@ export default function WalletPage() {
         </div>
       </section>
 
+      {/* تاریخچه تراکنش‌ها */}
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="font-bold text-xs">تاریخچه تراکنش‌ها</h2>
-            <p className="text-[10px] text-[var(--muted)] mt-0.5">{filteredTx.length} تراکنش</p>
+            <p className="text-[10px] text-[var(--muted)] mt-0.5 font-mono">{toFa(String(filteredTx.length))} تراکنش</p>
           </div>
         </div>
 
@@ -478,10 +489,10 @@ export default function WalletPage() {
                     </div>
                   </div>
                   <div className="text-left shrink-0">
-                    <div className={`text-[11px] font-bold ${tx.positive ? "text-emerald-400" : "text-red-400"}`} dir="ltr">
+                    <div className={`text-[11px] font-bold font-mono ${tx.positive ? "text-[var(--green)]" : "text-[var(--red)]"}`} dir="ltr">
                       {tx.positive ? "+" : "−"}{displayAmount(tx.amount, tx.amountType)}
                     </div>
-                    <div className="text-[9px] text-[var(--muted)] mt-0.5">
+                    <div className="text-[9px] text-[var(--muted)] mt-0.5 font-sans">
                       {tx.amountType === "gold" ? "گرم" : "تومان"}
                     </div>
                   </div>
@@ -523,7 +534,7 @@ export default function WalletPage() {
                       }}
                       className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition ${
                         isShared
-                          ? "text-emerald-400 bg-emerald-500/10"
+                          ? "text-[var(--green)] bg-[var(--green)]/10"
                           : "text-[var(--muted)] hover:text-[var(--gold)] hover:bg-[var(--gold)]/10"
                       }`}
                       aria-label="اشتراک‌گذاری رسید"
@@ -558,20 +569,20 @@ export default function WalletPage() {
             مشاهده همه تراکنش‌ها
           </button>
         )}
-        {/* دکمه استعلام رسید */}
-<div className="mt-3 pt-3 border-t border-[var(--border)]">
-  <button
-    type="button"
-    onClick={() => router.push("/verify")}
-    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[var(--border)] text-[10.5px] font-bold text-[var(--muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/50 transition"
-  >
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-    استعلام رسیدهایم را چک کنم
-  </button>
-</div>
+
+        <div className="mt-3 pt-3 border-t border-[var(--border)]">
+          <button
+            type="button"
+            onClick={() => router.push("/verify")}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[var(--border)] text-[10.5px] font-bold text-[var(--muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/50 transition"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            استعلام رسیدهایم را چک کنم
+          </button>
+        </div>
       </section>
 
       {invoiceTx && <TradeInvoice trade={invoiceTx} onClose={() => setInvoiceTx(null)} />}
@@ -586,6 +597,7 @@ export default function WalletPage() {
           onAdd={(newCard) => {
             setBankCards(prev => [...prev, newCard]);
             setShowAddCard(false);
+            toast.success("کارت با موفقیت اضافه شد");
           }}
         />
       )}
@@ -597,6 +609,7 @@ export default function WalletPage() {
           onDelete={() => {
             setBankCards(prev => prev.filter(c => c.id !== deleteCard.id));
             setDeleteCard(null);
+            toast.success("کارت حذف شد");
           }}
         />
       )}

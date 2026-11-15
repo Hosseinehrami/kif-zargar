@@ -3,12 +3,9 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { format, toFa, toEnDigits } from "@/lib/format";
+import { useToast } from "@/components/ui/Toast";
 
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
-const toEnDigits = (s: string) =>
-  s.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
-
-// اطلاعات ثابت حساب پلتفرم
 const PLATFORM_IBAN = "IR820170000000123456789012";
 const PLATFORM_CARD = "6104-3378-1234-5678";
 const PLATFORM_BANK = "بانک ملی ایران";
@@ -20,19 +17,12 @@ type IdentifierStep = "waiting" | "verified";
 
 const QUICK_AMOUNTS = [500_000, 1_000_000, 5_000_000, 10_000_000];
 
-// ================================================
-// تولید شناسه ۸ رقمی ثابت و یکتا برای هر کاربر
-// در بک‌اند واقعی: با چک کردن در DB انجام می‌شود
-// ================================================
 function generateUserDepositId(phone: string): string {
-  // از شماره موبایل یک hash ثابت می‌سازیم
-  // تا هر کاربر همیشه همان کد را داشته باشد
   let hash = 0;
   for (let i = 0; i < phone.length; i++) {
     hash = ((hash << 5) - hash) + phone.charCodeAt(i);
-    hash = hash & hash; // تبدیل به 32bit
+    hash = hash & hash;
   }
-  // تبدیل به ۸ رقم
   const absHash = Math.abs(hash);
   const eightDigit = String(absHash).padStart(10, "0").slice(2, 10);
   return eightDigit;
@@ -41,28 +31,24 @@ function generateUserDepositId(phone: string): string {
 export default function DepositPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const toast = useToast();
   const [tab, setTab] = useState<Tab>("identifier");
-  
-  // فرم مبلغ
+
   const [amount, setAmount] = useState("");
   const [copied, setCopied] = useState<"iban" | "card" | "identifier" | null>(null);
 
-  // درگاه بانکی
   const [gatewayOpen, setGatewayOpen] = useState(false);
   const [gatewayStatus, setGatewayStatus] = useState<"idle" | "loading" | "success">("idle");
 
-  // واریز دستی (فیش)
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [trackingNumber, setTrackingNumber] = useState("");
   const [manualAmount, setManualAmount] = useState("");
   const [manualStep, setManualStep] = useState<ManualStep>("form");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // واریز شناسه‌دار
   const [identifierStep, setIdentifierStep] = useState<IdentifierStep>("waiting");
   const [identifierAmount, setIdentifierAmount] = useState("");
 
-  // شناسه ثابت کاربر — از شماره موبایل تولید می‌شود
   const userDepositId = generateUserDepositId(user?.phone || "09000000000");
   const formattedId = `${userDepositId.slice(0, 4)}-${userDepositId.slice(4, 8)}`;
 
@@ -79,6 +65,7 @@ export default function DepositPage() {
   function copyToClipboard(text: string, type: "iban" | "card" | "identifier") {
     navigator.clipboard.writeText(text);
     setCopied(type);
+    toast.success("کپی شد");
     setTimeout(() => setCopied(null), 2000);
   }
 
@@ -86,7 +73,7 @@ export default function DepositPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert("حجم فایل باید کمتر از ۵ مگابایت باشد");
+      toast.error("حجم فایل باید کمتر از ۵ مگابایت باشد");
       return;
     }
     const reader = new FileReader();
@@ -105,18 +92,18 @@ export default function DepositPage() {
   async function handleManualSubmit() {
     if (!manualValid) return;
     setManualStep("success");
+    toast.success("فیش شما دریافت شد");
   }
 
   async function handleIdentifierConfirm() {
     if (!identifierValid) return;
-    // شبیه‌سازی: در بک‌اند، بعد از تایید بانک، اینجا چک می‌شود
     setIdentifierStep("verified");
+    toast.info("در حال بررسی واریز...");
   }
 
   return (
     <>
-      <div className="px-2.5 sm:px-4 pt-3 pb-8">
-        {/* هدر */}
+      <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
         <div className="flex items-center gap-2 mb-4">
           <button
             onClick={() => router.back()}
@@ -133,7 +120,6 @@ export default function DepositPage() {
           </div>
         </div>
 
-        {/* هشدار مهم */}
         <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex gap-2.5">
           <span className="text-base shrink-0">⚠️</span>
           <div className="flex-1 min-w-0">
@@ -144,7 +130,6 @@ export default function DepositPage() {
           </div>
         </div>
 
-        {/* تب‌ها */}
         <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-[var(--panel)] border border-[var(--border)] mb-4">
           <button
             onClick={() => setTab("identifier")}
@@ -172,13 +157,11 @@ export default function DepositPage() {
           </button>
         </div>
 
-        {/* ============= تب واریز شناسه‌دار ============= */}
         {tab === "identifier" && identifierStep === "waiting" && (
           <div className="space-y-3">
-            {/* کارت شناسه اختصاصی */}
             <div className="relative rounded-2xl border border-[var(--gold)]/30 bg-gradient-to-br from-[var(--gold)]/10 to-transparent p-4 overflow-hidden">
               <div className="absolute -right-6 -top-6 text-8xl opacity-10 pointer-events-none">🏷️</div>
-              
+
               <div className="relative">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="text-xs font-bold text-[var(--gold)]">شناسه واریز اختصاصی شما</div>
@@ -198,7 +181,7 @@ export default function DepositPage() {
                     onClick={() => copyToClipboard(userDepositId, "identifier")}
                     className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition ${
                       copied === "identifier"
-                        ? "bg-emerald-500/20 text-emerald-400"
+                        ? "bg-[var(--green)]/20 text-[var(--green)]"
                         : "bg-[var(--gold)] text-black hover:bg-[var(--gold)]/90"
                     }`}
                     title="کپی شناسه"
@@ -213,7 +196,6 @@ export default function DepositPage() {
               </div>
             </div>
 
-            {/* اطلاعات حساب مقصد */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-6 h-6 rounded-full bg-[var(--gold)]/15 text-[var(--gold)] flex items-center justify-center text-[10px] font-bold">۱</div>
@@ -228,7 +210,7 @@ export default function DepositPage() {
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-[10.5px] font-bold text-[var(--text)] break-all" dir="ltr">{PLATFORM_IBAN}</span>
-                    <button onClick={() => copyToClipboard(PLATFORM_IBAN, "iban")} className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition ${copied === "iban" ? "bg-emerald-500/20 text-emerald-400" : "bg-[var(--panel)] text-[var(--gold)] hover:bg-[var(--panel-2)]"}`}>
+                    <button onClick={() => copyToClipboard(PLATFORM_IBAN, "iban")} className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition ${copied === "iban" ? "bg-[var(--green)]/20 text-[var(--green)]" : "bg-[var(--panel)] text-[var(--gold)] hover:bg-[var(--panel-2)]"}`}>
                       {copied === "iban" ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg> : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>}
                     </button>
                   </div>
@@ -238,7 +220,7 @@ export default function DepositPage() {
                   <div className="text-[9.5px] text-[var(--muted)] mb-1">شماره کارت</div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-xs font-bold text-[var(--text)]" dir="ltr">{PLATFORM_CARD}</span>
-                    <button onClick={() => copyToClipboard(PLATFORM_CARD.replace(/-/g, ""), "card")} className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition ${copied === "card" ? "bg-emerald-500/20 text-emerald-400" : "bg-[var(--panel)] text-[var(--gold)] hover:bg-[var(--panel-2)]"}`}>
+                    <button onClick={() => copyToClipboard(PLATFORM_CARD.replace(/-/g, ""), "card")} className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition ${copied === "card" ? "bg-[var(--green)]/20 text-[var(--green)]" : "bg-[var(--panel)] text-[var(--gold)] hover:bg-[var(--panel-2)]"}`}>
                       {copied === "card" ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg> : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>}
                     </button>
                   </div>
@@ -246,7 +228,6 @@ export default function DepositPage() {
               </div>
             </div>
 
-            {/* نحوه واریز */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-6 h-6 rounded-full bg-[var(--gold)]/15 text-[var(--gold)] flex items-center justify-center text-[10px] font-bold">۲</div>
@@ -256,9 +237,9 @@ export default function DepositPage() {
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">مبلغ (تومان)</label>
               <div className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${
                 identifierAmount && !identifierValid
-                  ? "border-red-500/50"
+                  ? "border-[var(--red)]/50"
                   : identifierValid
-                  ? "border-emerald-500/50"
+                  ? "border-[var(--green)]/50"
                   : "border-[var(--border)] focus-within:border-[var(--gold)]"
               }`}>
                 <input
@@ -267,7 +248,7 @@ export default function DepositPage() {
                   value={identifierAmount ? Number(identifierAmount).toLocaleString("en-US") : ""}
                   onChange={e => setIdentifierAmount(toEnDigits(e.target.value).replace(/\D/g, ""))}
                   placeholder="حداقل ۱۰۰,۰۰۰ تومان"
-                  className="w-full bg-transparent text-center text-lg font-black text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
+                  className="w-full bg-transparent text-center text-lg font-black font-mono text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
                   dir="ltr"
                 />
               </div>
@@ -277,7 +258,7 @@ export default function DepositPage() {
                   <button
                     key={q}
                     onClick={() => setIdentifierAmount(String(q))}
-                    className={`py-2 rounded-lg border text-[11px] font-bold transition ${
+                    className={`py-2 rounded-lg border text-[11px] font-bold font-mono transition ${
                       identifierAmountNum === q
                         ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]"
                         : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--gold)]/50"
@@ -289,7 +270,6 @@ export default function DepositPage() {
               </div>
             </div>
 
-            {/* هشدار مهم */}
             <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3">
               <div className="text-[10.5px] font-bold text-amber-400 mb-1.5">⚠️ نکته مهم</div>
               <ul className="text-[10px] text-[var(--muted)] space-y-1 leading-relaxed list-disc list-inside">
@@ -309,7 +289,6 @@ export default function DepositPage() {
           </div>
         )}
 
-        {/* ============= حالت انتظار تایید بانک ============= */}
         {tab === "identifier" && identifierStep === "verified" && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-6 text-center">
             <div className="relative inline-block mb-4">
@@ -330,7 +309,7 @@ export default function DepositPage() {
               </div>
               <div className="flex justify-between text-[10.5px]">
                 <span className="text-[var(--muted)]">مبلغ اعلامی</span>
-                <span className="font-bold text-[var(--text)]">{format(identifierAmountNum)} تومان</span>
+                <span className="font-bold font-mono text-[var(--text)]">{format(identifierAmountNum)} تومان</span>
               </div>
               <div className="flex justify-between text-[10.5px] pt-1.5 border-t border-[var(--border)]">
                 <span className="text-[var(--muted)]">وضعیت</span>
@@ -342,10 +321,9 @@ export default function DepositPage() {
               💡 در نسخه نمایشی، این فرآیند شبیه‌سازی شده است
             </div>
 
-            {/* دکمه شبیه‌سازی — برای دمو */}
             <button
               onClick={() => router.push("/wallet")}
-              className="w-full h-10 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition mb-2"
+              className="w-full h-10 rounded-xl bg-[var(--green)] text-white font-bold text-xs hover:bg-[var(--green)]/90 transition mb-2"
             >
               ✓ شبیه‌سازی تایید بانک (دمو)
             </button>
@@ -358,31 +336,30 @@ export default function DepositPage() {
           </div>
         )}
 
-        {/* ============= تب درگاه بانکی ============= */}
         {tab === "gateway" && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
             <div className="text-center mb-4">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xl mb-2">⚡</div>
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-[var(--green)]/10 border border-[var(--green)]/30 flex items-center justify-center text-xl mb-2">⚡</div>
               <div className="text-xs font-bold mb-0.5">واریز آنی با درگاه</div>
               <div className="text-[10px] text-[var(--muted)]">مبلغ بلافاصله به کیف پول شما اضافه می‌شود</div>
             </div>
 
             <label className="text-[10px] text-[var(--muted)] block mb-1.5">مبلغ (تومان)</label>
-            <div className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${amount && !amountValid ? "border-red-500/50" : amountValid ? "border-emerald-500/50" : "border-[var(--border)] focus-within:border-[var(--gold)]"}`}>
+            <div className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${amount && !amountValid ? "border-[var(--red)]/50" : amountValid ? "border-[var(--green)]/50" : "border-[var(--border)] focus-within:border-[var(--gold)]"}`}>
               <input
                 type="text"
                 inputMode="numeric"
                 value={amount ? Number(amount).toLocaleString("en-US") : ""}
                 onChange={e => setAmount(toEnDigits(e.target.value).replace(/\D/g, ""))}
                 placeholder="حداقل ۱۰۰,۰۰۰ تومان"
-                className="w-full bg-transparent text-center text-lg font-black text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
+                className="w-full bg-transparent text-center text-lg font-black font-mono text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
                 dir="ltr"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 mt-3">
               {QUICK_AMOUNTS.map(q => (
-                <button key={q} onClick={() => setAmount(String(q))} className={`py-2 rounded-lg border text-[11px] font-bold transition ${amountNum === q ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]" : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--gold)]/50"}`}>
+                <button key={q} onClick={() => setAmount(String(q))} className={`py-2 rounded-lg border text-[11px] font-bold font-mono transition ${amountNum === q ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]" : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--gold)]/50"}`}>
                   + {format(q)} تومان
                 </button>
               ))}
@@ -394,7 +371,6 @@ export default function DepositPage() {
           </div>
         )}
 
-        {/* ============= تب واریز دستی (فیش) ============= */}
         {tab === "manual" && manualStep === "form" && (
           <div className="space-y-3">
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
@@ -404,13 +380,13 @@ export default function DepositPage() {
               </div>
 
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">مبلغ واریزی (تومان)</label>
-              <div className={`rounded-lg border-2 bg-[var(--bg)] px-3 py-2.5 mb-3 ${manualAmount && manualAmountNum < MIN_DEPOSIT ? "border-red-500/50" : "border-[var(--border)] focus-within:border-[var(--gold)]"}`}>
-                <input type="text" inputMode="numeric" value={manualAmount ? Number(manualAmount).toLocaleString("en-US") : ""} onChange={e => setManualAmount(toEnDigits(e.target.value).replace(/\D/g, ""))} placeholder="مبلغ دقیق واریز شده" className="w-full bg-transparent text-center text-sm font-bold text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal outline-none" dir="ltr" />
+              <div className={`rounded-lg border-2 bg-[var(--bg)] px-3 py-2.5 mb-3 ${manualAmount && manualAmountNum < MIN_DEPOSIT ? "border-[var(--red)]/50" : "border-[var(--border)] focus-within:border-[var(--gold)]"}`}>
+                <input type="text" inputMode="numeric" value={manualAmount ? Number(manualAmount).toLocaleString("en-US") : ""} onChange={e => setManualAmount(toEnDigits(e.target.value).replace(/\D/g, ""))} placeholder="مبلغ دقیق واریز شده" className="w-full bg-transparent text-center text-sm font-bold font-mono text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal outline-none" dir="ltr" />
               </div>
 
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">شماره پیگیری تراکنش</label>
               <div className="rounded-lg border-2 bg-[var(--bg)] px-3 py-2.5 mb-3 border-[var(--border)] focus-within:border-[var(--gold)]">
-                <input type="text" inputMode="numeric" value={trackingNumber} onChange={e => setTrackingNumber(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 20))} placeholder="حداقل ۸ رقم" className="w-full bg-transparent text-center text-sm font-bold text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal outline-none font-mono" dir="ltr" />
+                <input type="text" inputMode="numeric" value={trackingNumber} onChange={e => setTrackingNumber(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 20))} placeholder="حداقل ۸ رقم" className="w-full bg-transparent text-center text-sm font-bold font-mono text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal outline-none" dir="ltr" />
               </div>
 
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">تصویر فیش واریزی</label>
@@ -434,13 +410,12 @@ export default function DepositPage() {
           </div>
         )}
 
-        {/* ============= موفقیت واریز دستی ============= */}
         {tab === "manual" && manualStep === "success" && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-6 text-center">
             <div className="relative inline-block mb-4">
-              <div className="absolute inset-0 bg-emerald-500 opacity-30 rounded-full blur-xl animate-pulse" />
-              <div className="relative w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              <div className="absolute inset-0 bg-[var(--green)] opacity-30 rounded-full blur-xl animate-pulse" />
+              <div className="relative w-16 h-16 rounded-full bg-[var(--green)]/20 border-2 border-[var(--green)] flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--green)]"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
             </div>
             <h2 className="text-base font-bold mb-2">فیش شما دریافت شد</h2>
@@ -454,7 +429,6 @@ export default function DepositPage() {
         )}
       </div>
 
-      {/* مودال درگاه */}
       {gatewayOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl p-6">
@@ -468,11 +442,11 @@ export default function DepositPage() {
             )}
             {gatewayStatus === "success" && (
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--green)]/20 border-2 border-[var(--green)] flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--green)]"><polyline points="20 6 9 17 4 12" /></svg>
                 </div>
                 <div className="text-sm font-bold mb-1.5">پرداخت موفق</div>
-                <div className="text-lg font-black text-[var(--gold)] mb-4">{format(amountNum)} <span className="text-[10px] font-normal">تومان</span></div>
+                <div className="text-lg font-black text-[var(--gold)] font-mono mb-4">{format(amountNum)} <span className="text-[10px] font-normal font-sans">تومان</span></div>
                 <button onClick={() => { setGatewayOpen(false); router.push("/wallet"); }} className="w-full h-10 rounded-xl bg-[var(--gold)] text-black font-bold text-xs">بازگشت به کیف پول</button>
               </div>
             )}

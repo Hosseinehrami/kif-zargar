@@ -63,7 +63,6 @@ export default function PinRecoveryPage() {
   const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // فرم تیکت
   const [nationalId, setNationalId] = useState(user?.nationalId || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [email, setEmail] = useState("");
@@ -71,7 +70,6 @@ export default function PinRecoveryPage() {
   const [preferredTime, setPreferredTime] = useState("morning");
   const [submitting, setSubmitting] = useState(false);
 
-  // پیگیری
   const [trackCode, setTrackCode] = useState("");
   const [trackResult, setTrackResult] = useState<Ticket | null | "not-found">(null);
   const [tracking, setTracking] = useState(false);
@@ -182,7 +180,6 @@ export default function PinRecoveryPage() {
               </div>
             </div>
 
-            {/* گزینه ۱ — تماس فوری */}
             <a
               href={`tel:${COMPANY_INFO.phone.replace(/\D/g, "")}`}
               className="block rounded-2xl border border-[var(--gold)]/40 bg-gradient-to-br from-[var(--gold)]/10 to-transparent p-4 mb-2 hover:border-[var(--gold)] transition"
@@ -204,7 +201,6 @@ export default function PinRecoveryPage() {
               </div>
             </a>
 
-            {/* گزینه ۲ — تیکت */}
             <button
               onClick={() => setScreen("ticket")}
               className="w-full text-right rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 mb-2 hover:border-[var(--gold)]/40 transition"
@@ -223,7 +219,6 @@ export default function PinRecoveryPage() {
               </div>
             </button>
 
-            {/* گزینه ۳ — پیگیری */}
             <button
               onClick={() => setScreen("track")}
               className="w-full text-right rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 mb-3 hover:border-[var(--gold)]/40 transition"
@@ -252,159 +247,149 @@ export default function PinRecoveryPage() {
 
         {/* ============ فرم تیکت ============ */}
         {screen === "ticket" && (
-          <>
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
-              <div className="text-center mb-4">
-                <div className="w-12 h-12 mx-auto rounded-full bg-sky-500/10 border-2 border-sky-500/40 flex items-center justify-center text-2xl mb-2">
-                  📝
-                </div>
-                <h2 className="text-sm font-bold mb-1">ثبت درخواست بازیابی</h2>
-                <p className="text-[10px] text-[var(--muted)] leading-relaxed">
-                  اطلاعات زیر را با دقت پر کنید. پشتیبانی با این اطلاعات با شما تماس می‌گیرد.
-                </p>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
+            <div className="text-center mb-4">
+              <div className="w-12 h-12 mx-auto rounded-full bg-sky-500/10 border-2 border-sky-500/40 flex items-center justify-center text-2xl mb-2">
+                📝
               </div>
-
-              {/* کد ملی */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] text-[var(--text)]">
-                    کد ملی <span className="text-red-400">*</span>
-                  </label>
-                  <span className={`text-[9px] ${nationalIdValid ? "text-emerald-400" : "text-[var(--muted)]"}`}>
-                    {toFa(String(nationalId.length))}/۱۰
-                  </span>
-                </div>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  value={nationalId}
-                  onChange={(e) => setNationalId(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 10))}
-                  placeholder="۱۰ رقم"
-                  dir="ltr"
-                  className={`w-full h-10 rounded-lg bg-[var(--bg)] border px-3 text-[11px] font-bold text-center outline-none transition ${
-                    nationalId.length === 10
-                      ? "border-emerald-500/50"
-                      : nationalId.length > 0
-                      ? "border-amber-500/50"
-                      : "border-[var(--border)] focus:border-[var(--gold)]"
-                  }`}
-                />
-              </div>
-
-              {/* شماره موبایل */}
-              <div className="mb-3">
-                <label className="text-[10px] text-[var(--text)] block mb-1">
-                  شماره موبایل ثبت‌شده <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  value={phone}
-                  onChange={(e) => setPhone(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 11))}
-                  placeholder="09xxxxxxxxx"
-                  dir="ltr"
-                  className="w-full h-10 rounded-lg bg-[var(--bg)] border border-[var(--border)] px-3 text-[11px] font-bold text-center outline-none focus:border-[var(--gold)] transition"
-                />
-                <div className="text-[9px] text-[var(--muted)] mt-1">
-                  پشتیبانی با همین شماره تماس می‌گیرد.
-                </div>
-              </div>
-
-              {/* ایمیل */}
-              <div className="mb-3">
-                <label className="text-[10px] text-[var(--text)] block mb-1">
-                  ایمیل (اختیاری)
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@email.com"
-                  dir="ltr"
-                  className={`w-full h-10 rounded-lg bg-[var(--bg)] border px-3 text-[11px] text-center outline-none transition ${
-                    email && !emailValid
-                      ? "border-red-500/50"
-                      : "border-[var(--border)] focus:border-[var(--gold)]"
-                  }`}
-                />
-                <div className="text-[9px] text-[var(--muted)] mt-1">
-                  نتیجه درخواست به این ایمیل هم ارسال می‌شود.
-                </div>
-              </div>
-
-              {/* زمان تماس */}
-              <div className="mb-3">
-                <label className="text-[10px] text-[var(--text)] block mb-1.5">
-                  زمان مناسب تماس
-                </label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {TIME_OPTIONS.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setPreferredTime(t.id)}
-                      className={`rounded-lg p-2 transition border ${
-                        preferredTime === t.id
-                          ? "border-[var(--gold)] bg-[var(--gold)]/10"
-                          : "border-[var(--border)] hover:border-[var(--gold)]/40"
-                      }`}
-                    >
-                      <div className={`text-[10px] font-bold ${preferredTime === t.id ? "text-[var(--gold)]" : "text-[var(--text)]"}`}>
-                        {t.label}
-                      </div>
-                      <div className="text-[8.5px] text-[var(--muted)] mt-0.5">{t.sub}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* توضیحات */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] text-[var(--text)]">
-                    توضیحات <span className="text-red-400">*</span>
-                  </label>
-                  <span className={`text-[9px] ${reasonValid ? "text-emerald-400" : "text-amber-400"}`}>
-                    {toFa(String(reason.trim().length))}/۲۰
-                  </span>
-                </div>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value.slice(0, 150))}
-                  rows={3}
-                  placeholder="مثلاً: کد امن را فراموش کرده‌ام و گوشی فعلی‌ام در دسترس است."
-                  className={`w-full rounded-lg bg-[var(--bg)] border px-3 py-2 text-[10.5px] text-[var(--text)] placeholder:text-[var(--muted)] outline-none resize-none transition ${
-                    reason.trim().length > 0 && !reasonValid
-                      ? "border-amber-500/50"
-                      : reasonValid
-                      ? "border-emerald-500/50"
-                      : "border-[var(--border)] focus:border-[var(--gold)]"
-                  }`}
-                />
-              </div>
-
-              <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 mb-3">
-                <div className="text-[9.5px] text-amber-400 leading-relaxed">
-                  ⚠️ پشتیبانی ممکن است برای احراز هویت، مدارکی مانند کارت ملی یا سلفی درخواست کند.
-                </div>
-              </div>
-
-              <button
-                onClick={handleSubmit}
-                disabled={!isValid || submitting}
-                className="w-full h-11 rounded-xl bg-[var(--gold)] text-black font-bold text-xs hover:bg-[var(--gold)]/90 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                    در حال ثبت...
-                  </>
-                ) : (
-                  "ثبت درخواست"
-                )}
-              </button>
+              <h2 className="text-sm font-bold mb-1">ثبت درخواست بازیابی</h2>
+              <p className="text-[10px] text-[var(--muted)] leading-relaxed">
+                اطلاعات زیر را با دقت پر کنید. پشتیبانی با این اطلاعات با شما تماس می‌گیرد.
+              </p>
             </div>
-          </>
+
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] text-[var(--text)]">
+                  کد ملی <span className="text-red-400">*</span>
+                </label>
+                <span className={`text-[9px] ${nationalIdValid ? "text-emerald-400" : "text-[var(--muted)]"}`}>
+                  {toFa(String(nationalId.length))}/۱۰
+                </span>
+              </div>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={nationalId}
+                onChange={(e) => setNationalId(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 10))}
+                placeholder="۱۰ رقم"
+                dir="ltr"
+                className={`w-full h-10 rounded-lg bg-[var(--bg)] border px-3 text-[11px] font-bold text-center outline-none transition ${
+                  nationalId.length === 10
+                    ? "border-emerald-500/50"
+                    : nationalId.length > 0
+                    ? "border-amber-500/50"
+                    : "border-[var(--border)] focus:border-[var(--gold)]"
+                }`}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="text-[10px] text-[var(--text)] block mb-1">
+                شماره موبایل ثبت‌شده <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => setPhone(toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 11))}
+                placeholder="09xxxxxxxxx"
+                dir="ltr"
+                className="w-full h-10 rounded-lg bg-[var(--bg)] border border-[var(--border)] px-3 text-[11px] font-bold text-center outline-none focus:border-[var(--gold)] transition"
+              />
+              <div className="text-[9px] text-[var(--muted)] mt-1">
+                پشتیبانی با همین شماره تماس می‌گیرد.
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="text-[10px] text-[var(--text)] block mb-1">
+                ایمیل (اختیاری)
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="example@email.com"
+                dir="ltr"
+                className={`w-full h-10 rounded-lg bg-[var(--bg)] border px-3 text-[11px] text-center outline-none transition ${
+                  email && !emailValid
+                    ? "border-red-500/50"
+                    : "border-[var(--border)] focus:border-[var(--gold)]"
+                }`}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="text-[10px] text-[var(--text)] block mb-1.5">
+                زمان مناسب تماس
+              </label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {TIME_OPTIONS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setPreferredTime(t.id)}
+                    className={`rounded-lg p-2 transition border ${
+                      preferredTime === t.id
+                        ? "border-[var(--gold)] bg-[var(--gold)]/10"
+                        : "border-[var(--border)] hover:border-[var(--gold)]/40"
+                    }`}
+                  >
+                    <div className={`text-[10px] font-bold ${preferredTime === t.id ? "text-[var(--gold)]" : "text-[var(--text)]"}`}>
+                      {t.label}
+                    </div>
+                    <div className="text-[8.5px] text-[var(--muted)] mt-0.5">{t.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] text-[var(--text)]">
+                  توضیحات <span className="text-red-400">*</span>
+                </label>
+                <span className={`text-[9px] ${reasonValid ? "text-emerald-400" : "text-amber-400"}`}>
+                  {toFa(String(reason.trim().length))}/۲۰
+                </span>
+              </div>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value.slice(0, 150))}
+                rows={3}
+                placeholder="مثلاً: کد امن را فراموش کرده‌ام و گوشی فعلی‌ام در دسترس است."
+                className={`w-full rounded-lg bg-[var(--bg)] border px-3 py-2 text-[10.5px] text-[var(--text)] placeholder:text-[var(--muted)] outline-none resize-none transition ${
+                  reason.trim().length > 0 && !reasonValid
+                    ? "border-amber-500/50"
+                    : reasonValid
+                    ? "border-emerald-500/50"
+                    : "border-[var(--border)] focus:border-[var(--gold)]"
+                }`}
+              />
+            </div>
+
+            <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 mb-3">
+              <div className="text-[9.5px] text-amber-400 leading-relaxed">
+                ⚠️ پشتیبانی ممکن است برای احراز هویت، مدارکی مانند کارت ملی یا سلفی درخواست کند.
+              </div>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={!isValid || submitting}
+              className="w-full h-11 rounded-xl bg-[var(--gold)] text-black font-bold text-xs hover:bg-[var(--gold)]/90 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  در حال ثبت...
+                </>
+              ) : (
+                "ثبت درخواست"
+              )}
+            </button>
+          </div>
         )}
 
         {/* ============ موفقیت ============ */}
@@ -422,7 +407,6 @@ export default function PinRecoveryPage() {
               </p>
             </div>
 
-            {/* کد رهگیری */}
             <div className="rounded-2xl border-2 border-[var(--gold)]/40 bg-[var(--bg)]/60 p-4 mb-3">
               <div className="text-[9px] text-[var(--muted)] text-center mb-1">کد رهگیری درخواست</div>
               <div className="text-xl font-black text-[var(--gold)] font-mono tracking-widest text-center mb-3" dir="ltr">
@@ -440,7 +424,6 @@ export default function PinRecoveryPage() {
               </button>
             </div>
 
-            {/* خلاصه */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-3 mb-3 space-y-2 text-[10.5px]">
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">شماره تماس</span>
@@ -462,7 +445,6 @@ export default function PinRecoveryPage() {
               </div>
             </div>
 
-            {/* مراحل بعدی */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-3 mb-3">
               <div className="text-[11px] font-bold mb-2.5">📋 مراحل بعدی</div>
               <div className="space-y-2">
@@ -484,7 +466,6 @@ export default function PinRecoveryPage() {
               </div>
             </div>
 
-            {/* هشدار */}
             <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-3 mb-3">
               <div className="text-[10px] text-red-400 leading-relaxed">
                 🔒 <span className="font-bold">تا ۲۴ ساعت بعد از بازیابی:</span> امکان برداشت فیزیکی و انتقال طلا محدود خواهد بود. این کار برای حفاظت از حساب شماست.
@@ -537,7 +518,6 @@ export default function PinRecoveryPage() {
               </button>
             </div>
 
-            {/* نتیجه — پیدا شد */}
             {trackResult && trackResult !== "not-found" && (
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -570,7 +550,6 @@ export default function PinRecoveryPage() {
               </div>
             )}
 
-            {/* نتیجه — پیدا نشد */}
             {trackResult === "not-found" && (
               <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/10 to-transparent p-4 text-center">
                 <div className="text-3xl mb-2">❌</div>

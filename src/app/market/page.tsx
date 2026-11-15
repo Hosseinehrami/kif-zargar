@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { format, toFa, toEnDigits } from "@/lib/format";
+import { SETTINGS } from "@/lib/settings";
 
-const GOLD_PRICE = 19_080_000;
 const VAT_RATE = 0.09;
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
 
 // ---------- Types ----------
 type Review = { user: string; rating: number; date: string; text: string; verified?: boolean };
@@ -23,7 +23,6 @@ type Product = {
 
 const CATEGORIES = ["همه", "شمش و سکه", "انگشتر", "گردنبند", "دستبند", "گوشواره"];
 const ALL_CITIES = ["همه شهرها", "تهران", "مشهد", "اصفهان", "شیراز", "تبریز", "کرج", "یزد", "رشت"];
-
 const NOW_BASE = Date.now();
 
 // ---------- Mock Data ----------
@@ -108,7 +107,7 @@ const StarIcon = ({ fill = "currentColor", size = 12 }: { fill?: string; size?: 
   </svg>
 );
 const HeartIcon = ({ fill = "none" }: { fill?: string }) => <svg width="18" height="18" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>;
-const CheckBadgeIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-emerald-500"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>;
+const CheckBadgeIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[var(--green)]"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>;
 const CloseIcon = ({ size = 20 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
 const FilterIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>;
 const CartIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>;
@@ -131,6 +130,7 @@ const TrustBadges = () => (
 );
 
 function calcPrice(p: Product, quantity: number = 1) {
+  const GOLD_PRICE = SETTINGS.fees.goldPrice;
   const goldValue = p.weight * GOLD_PRICE * quantity;
   const feeValue = goldValue * (p.executionFee / 100);
   const profitValue = goldValue * (p.sellerProfit / 100);
@@ -172,7 +172,7 @@ function CountdownTimer({ endsAt }: { endsAt: number }) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     <div className="flex items-center gap-1 text-[10px] font-mono" dir="ltr">
-      {days > 0 && <span className="bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded font-bold">{format(days)}d</span>}
+      {days > 0 && <span className="bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded font-bold">{toFa(String(days))}d</span>}
       <span className="bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded font-bold">{pad(hours)}</span>
       <span className="text-red-400">:</span>
       <span className="bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded font-bold">{pad(minutes)}</span>
@@ -187,7 +187,7 @@ function SkeletonCard() {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] overflow-hidden animate-pulse">
       <div className="h-32 sm:h-40 bg-[var(--panel-2)]" />
-      <div className="p-2.5 space-y-2">
+      <div className="p-3 space-y-2">
         <div className="h-3 bg-[var(--panel-2)] rounded w-full" />
         <div className="h-3 bg-[var(--panel-2)] rounded w-2/3" />
         <div className="h-2 bg-[var(--panel-2)] rounded w-1/2 mt-3" />
@@ -196,21 +196,6 @@ function SkeletonCard() {
           <div className="h-3 bg-[var(--panel-2)] rounded w-8" />
         </div>
       </div>
-    </div>
-  );
-}
-
-// ---------- Star Input ----------
-function StarRatingInput({ value, onChange, size = 20 }: { value: number; onChange: (v: number) => void; size?: number }) {
-  return (
-    <div className="flex gap-0.5" dir="ltr">
-      {[1, 2, 3, 4, 5].map(star => (
-        <button key={star} type="button" onClick={() => onChange(star)} className="transition-transform hover:scale-110">
-          <svg width={size} height={size} viewBox="0 0 24 24" fill={star <= value ? "#f59e0b" : "none"} stroke={star <= value ? "#f59e0b" : "#71717a"} strokeWidth="1.5">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-        </button>
-      ))}
     </div>
   );
 }
@@ -226,15 +211,15 @@ function SellerProfileModal({ product, onClose, onViewAll }: { product: Product;
           <h3 className="text-base font-bold flex items-center gap-1.5">{product.seller} {product.isVerified && <CheckBadgeIcon />}</h3>
           <p className="text-xs text-[var(--muted)] mt-1">{product.sellerLocation}</p>
           <div className="grid grid-cols-2 gap-2 w-full mt-5">
-            <div className="bg-[var(--panel-2)] p-2 rounded-xl border border-[var(--border)] text-center">
+            <div className="bg-[var(--panel-2)] p-2.5 rounded-xl border border-[var(--border)] text-center">
               <div className="text-[10px] text-[var(--muted)] mb-1">رضایت خریداران</div>
-              <div className="text-sm font-bold text-emerald-400">{product.sellerRate}٪</div>
+              <div className="text-sm font-bold text-[var(--green)] font-mono">{toFa(String(product.sellerRate))}٪</div>
             </div>
-            <div className="bg-[var(--panel-2)] p-2 rounded-xl border border-[var(--border)] text-center">
+            <div className="bg-[var(--panel-2)] p-2.5 rounded-xl border border-[var(--border)] text-center">
               <div className="text-[10px] text-[var(--muted)] mb-1">فروش موفق</div>
-              <div className="text-sm font-bold">{format(product.sellerSales)}+</div>
+              <div className="text-sm font-bold font-mono">{format(product.sellerSales)}+</div>
             </div>
-            <div className="bg-[var(--panel-2)] p-2 rounded-xl border border-[var(--border)] text-center col-span-2">
+            <div className="bg-[var(--panel-2)] p-2.5 rounded-xl border border-[var(--border)] text-center col-span-2">
               <div className="text-[10px] text-[var(--muted)] mb-1">زمان پاسخ‌دهی</div>
               <div className="text-xs font-bold text-[var(--gold)]">{product.sellerResponse}</div>
             </div>
@@ -296,10 +281,10 @@ function CartDrawer({
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-1.5 bg-[var(--panel)] border border-[var(--border)] rounded-md px-1">
                           <button onClick={() => onQtyChange(p.id, qty + 1)} disabled={qty >= p.stock} className="p-1 text-[var(--muted)] hover:text-[var(--gold)] disabled:opacity-30"><PlusIcon /></button>
-                          <span className="text-[11px] font-bold w-4 text-center">{qty}</span>
+                          <span className="text-[11px] font-bold w-4 text-center font-mono">{toFa(String(qty))}</span>
                           <button onClick={() => onQtyChange(p.id, qty - 1)} className="p-1 text-[var(--muted)] hover:text-[var(--gold)]"><MinusIcon /></button>
                         </div>
-                        <div className="text-[11px] font-bold text-[var(--gold)]">{format(finalPrice)} <span className="text-[9px] font-normal text-[var(--muted)]">ت</span></div>
+                        <div className="text-[11px] font-bold text-[var(--gold)] font-mono">{format(finalPrice)} <span className="text-[9px] font-normal text-[var(--muted)]">ت</span></div>
                       </div>
                     </div>
                   </div>
@@ -309,7 +294,7 @@ function CartDrawer({
             <div className="p-4 border-t border-[var(--border)]">
               <div className="flex justify-between mb-3">
                 <span className="text-xs text-[var(--muted)]">جمع کل</span>
-                <span className="text-sm font-bold text-[var(--gold)]">{format(total)} <span className="text-[10px] font-normal">تومان</span></span>
+                <span className="text-sm font-bold text-[var(--gold)] font-mono">{format(total)} <span className="text-[10px] font-normal">تومان</span></span>
               </div>
               <button onClick={onCheckout} className="w-full bg-[var(--gold)] hover:bg-[var(--gold)]/90 text-black font-bold text-sm py-2.5 rounded-xl transition">
                 ادامه و پرداخت
@@ -328,14 +313,14 @@ function CompareModal({ products, onClose, onRemove }: { products: Product[]; on
   const rows = [
     { label: "تصویر", render: (p: Product) => <div className={`w-full h-20 rounded-lg bg-gradient-to-br ${p.color} flex items-center justify-center text-4xl`}>{p.images[0]}</div> },
     { label: "عنوان", render: (p: Product) => <span className="text-xs font-bold">{p.title}</span> },
-    { label: "قیمت نهایی", render: (p: Product) => <span className="text-xs font-bold text-[var(--gold)]">{format(calcPrice(p).finalPrice)} ت</span> },
-    { label: "وزن", render: (p: Product) => <span className="text-xs">{format(p.weight)} گرم</span> },
-    { label: "عیار", render: (p: Product) => <span className="text-xs">{format(p.purity)}</span> },
-    { label: "اجرت", render: (p: Product) => <span className="text-xs">{format(p.executionFee)}٪</span> },
-    { label: "سود فروشنده", render: (p: Product) => <span className="text-xs">{format(p.sellerProfit)}٪</span> },
+    { label: "قیمت نهایی", render: (p: Product) => <span className="text-xs font-bold text-[var(--gold)] font-mono">{format(calcPrice(p).finalPrice)} ت</span> },
+    { label: "وزن", render: (p: Product) => <span className="text-xs font-mono">{toFa(String(p.weight))} گرم</span> },
+    { label: "عیار", render: (p: Product) => <span className="text-xs font-mono">{toFa(String(p.purity))}</span> },
+    { label: "اجرت", render: (p: Product) => <span className="text-xs font-mono">{toFa(String(p.executionFee))}٪</span> },
+    { label: "سود فروشنده", render: (p: Product) => <span className="text-xs font-mono">{toFa(String(p.sellerProfit))}٪</span> },
     { label: "فروشنده", render: (p: Product) => <span className="text-[10px]">{p.seller}</span> },
-    { label: "امتیاز", render: (p: Product) => <span className="text-xs font-bold text-amber-500">★ {p.rating}</span> },
-    { label: "موجودی", render: (p: Product) => p.stock === 0 ? <span className="text-xs text-red-400">ناموجود</span> : <span className="text-xs">{format(p.stock)} عدد</span> },
+    { label: "امتیاز", render: (p: Product) => <span className="text-xs font-bold text-amber-500 font-mono">★ {toFa(String(p.rating))}</span> },
+    { label: "موجودی", render: (p: Product) => p.stock === 0 ? <span className="text-xs text-red-400">ناموجود</span> : <span className="text-xs font-mono">{format(p.stock)} عدد</span> },
   ];
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center" onClick={onClose}>
@@ -431,8 +416,8 @@ function ProductModal({
             <div className="flex items-center gap-3 mb-3 flex-wrap">
               <div className="flex items-center gap-1 text-amber-500 text-sm">
                 <StarIcon />
-                <span className="font-bold text-[var(--text)]">{product.rating}</span>
-                <span className="text-xs text-[var(--muted)]">({product.reviewsCount} دیدگاه)</span>
+                <span className="font-bold text-[var(--text)] font-mono">{toFa(String(product.rating))}</span>
+                <span className="text-xs text-[var(--muted)] font-mono">({format(product.reviewsCount)} دیدگاه)</span>
               </div>
               <div className="w-1 h-1 rounded-full bg-[var(--border)] hidden sm:block"></div>
               <button onClick={() => setShowSeller(true)} className="flex items-center gap-1.5 text-xs text-[var(--gold)] font-semibold hover:underline">
@@ -440,9 +425,8 @@ function ProductModal({
               </button>
             </div>
 
-            {/* Views today + stock + countdown row */}
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <div className="flex items-center gap-1 text-[10px] text-[var(--muted)]">
+              <div className="flex items-center gap-1 text-[10px] text-[var(--muted)] font-mono">
                 <EyeIcon /> {format(product.viewsToday)} نفر امروز دیدند
               </div>
               {isOut ? (
@@ -450,7 +434,7 @@ function ProductModal({
               ) : isLow ? (
                 <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">فقط {format(product.stock)} عدد مانده</span>
               ) : (
-                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">{format(product.stock)} عدد موجود</span>
+                <span className="text-[10px] text-[var(--green)] font-bold bg-[var(--green)]/10 px-2 py-0.5 rounded-full border border-[var(--green)]/30 font-mono">{format(product.stock)} عدد موجود</span>
               )}
             </div>
 
@@ -465,19 +449,19 @@ function ProductModal({
 
             <div className="flex items-center gap-2 mt-3 bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2 text-[10px] text-[var(--muted)]">
               <span className="text-sm">🚚</span>
-              <span>ارسال از <b className="text-[var(--text)]">{product.sellerLocation}</b> · تحویل ۲-۳ روز کاری · <b className="text-emerald-400">رایگان</b></span>
+              <span>ارسال از <b className="text-[var(--text)]">{product.sellerLocation}</b> · تحویل ۲-۳ روز کاری · <b className="text-[var(--green)]">رایگان</b></span>
             </div>
 
             <p className="text-xs text-[var(--muted)] leading-relaxed mt-3 mb-4 text-justify">{product.description}</p>
 
             <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="bg-[var(--panel-2)] p-2 rounded-lg border border-[var(--border)]"><div className="text-[10px] text-[var(--muted)] mb-0.5">وزن</div><div className="text-xs font-bold">{format(product.weight)} گرم</div></div>
-              <div className="bg-[var(--panel-2)] p-2 rounded-lg border border-[var(--border)]"><div className="text-[10px] text-[var(--muted)] mb-0.5">عیار</div><div className="text-xs font-bold">{format(product.purity)} عیار</div></div>
+              <div className="bg-[var(--panel-2)] p-2 rounded-lg border border-[var(--border)]"><div className="text-[10px] text-[var(--muted)] mb-0.5">وزن</div><div className="text-xs font-bold font-mono">{toFa(String(product.weight))} گرم</div></div>
+              <div className="bg-[var(--panel-2)] p-2 rounded-lg border border-[var(--border)]"><div className="text-[10px] text-[var(--muted)] mb-0.5">عیار</div><div className="text-xs font-bold font-mono">{toFa(String(product.purity))} عیار</div></div>
               <div className="bg-[var(--panel-2)] p-2 rounded-lg border border-[var(--border)] col-span-2">
                 <div className="text-[10px] text-[var(--muted)] mb-0.5">موجود در: <span className="text-[9px] text-[var(--gold)]">(برای فیلتر کلیک کنید)</span></div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {product.cities.map(c => (
-                    <button key={c} onClick={() => { onSelectCity(c); onClose(); }} className="text-[10px] bg-[var(--bg)] hover:bg-[var(--gold)]/20 hover:text-[var(--gold)] px-2 py-0.5 rounded border border-[var(--border)]">{c}</button>
+                    <button key={c} onClick={() => { onSelectCity(c); onClose(); }} className="text-[10px] bg-[var(--bg)] hover:bg-[var(--gold)]/20 hover:text-[var(--gold)] px-2 py-0.5 rounded border border-[var(--border)] transition">{c}</button>
                   ))}
                 </div>
               </div>
@@ -489,21 +473,21 @@ function ProductModal({
                 <span className="text-xs font-bold">تعداد سفارش:</span>
                 <div className="flex items-center gap-3 bg-[var(--panel)] border border-[var(--border)] rounded-lg px-2 py-1">
                   <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="text-lg leading-none px-1 text-[var(--muted)] hover:text-[var(--gold)]">-</button>
-                  <span className="text-sm font-bold w-4 text-center">{quantity}</span>
+                  <span className="text-sm font-bold w-4 text-center font-mono">{toFa(String(quantity))}</span>
                   <button onClick={() => setQuantity(q => Math.min(product.stock, q + 1))} disabled={quantity >= product.stock} className="text-lg leading-none px-1 text-[var(--muted)] hover:text-[var(--gold)] disabled:opacity-30">+</button>
                 </div>
               </div>
 
-              <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>ارزش طلا ({format(product.weight * quantity)} گرم)</span><span>{format(goldValue)} ت</span></div>
-              {product.executionFee > 0 && <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>اجرت ({format(product.executionFee)}٪)</span><span>{format(feeValue)} ت</span></div>}
-              {product.sellerProfit > 0 && <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>سود فروشنده ({format(product.sellerProfit)}٪)</span><span>{format(profitValue)} ت</span></div>}
-              <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>مالیات (۹٪)</span><span>{format(taxValue)} ت</span></div>
-              {product.discountPercent && product.discountPercent > 0 && <div className="flex justify-between text-xs mb-1.5 text-red-400"><span>تخفیف ({format(product.discountPercent)}٪)</span><span>{format(discountValue)} ت-</span></div>}
+              <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>ارزش طلا ({format(product.weight * quantity)} گرم)</span><span className="font-mono">{format(goldValue)} ت</span></div>
+              {product.executionFee > 0 && <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>اجرت ({toFa(String(product.executionFee))}٪)</span><span className="font-mono">{format(feeValue)} ت</span></div>}
+              {product.sellerProfit > 0 && <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>سود فروشنده ({toFa(String(product.sellerProfit))}٪)</span><span className="font-mono">{format(profitValue)} ت</span></div>}
+              <div className="flex justify-between text-xs mb-1.5 text-[var(--muted)]"><span>مالیات (۹٪)</span><span className="font-mono">{format(taxValue)} ت</span></div>
+              {product.discountPercent && product.discountPercent > 0 && <div className="flex justify-between text-xs mb-1.5 text-red-400"><span>تخفیف ({toFa(String(product.discountPercent))}٪)</span><span className="font-mono">{format(discountValue)} ت-</span></div>}
               
               <div className="h-px bg-[var(--border)] my-2"></div>
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-bold">مبلغ قابل پرداخت</span>
-                <div className="text-base font-extrabold text-[var(--gold)]">{format(finalPrice)} <span className="text-xs font-normal">تومان</span></div>
+                <div className="text-base font-extrabold text-[var(--gold)] font-mono">{format(finalPrice)} <span className="text-xs font-normal">تومان</span></div>
               </div>
 
               {!isOut && (
@@ -512,7 +496,7 @@ function ProductModal({
                     <button onClick={() => setPayType("rial")} className={`py-1.5 text-xs font-bold rounded-lg border ${payType === "rial" ? "bg-[var(--gold)] text-black border-[var(--gold)]" : "bg-[var(--panel)] border-[var(--border)] text-[var(--muted)]"}`}>ریالی</button>
                     <button onClick={() => setPayType("gold")} className={`py-1.5 text-xs font-bold rounded-lg border ${payType === "gold" ? "bg-[var(--gold)] text-black border-[var(--gold)]" : "bg-[var(--panel)] border-[var(--border)] text-[var(--muted)]"}`}>با طلا</button>
                   </div>
-                  <button className="w-full bg-[var(--gold)] hover:bg-[var(--gold)]/90 text-black font-bold text-sm py-2.5 rounded-xl transition mb-2">
+                  <button className="w-full bg-[var(--gold)] hover:bg-[var(--gold)]/90 text-black font-bold text-sm py-2.5 rounded-xl transition mb-2 font-mono">
                     {payType === "rial" ? `پرداخت ${format(finalPrice)} تومان` : `پرداخت ${format(goldToPay)} گرم طلا`}
                   </button>
                   <button onClick={() => { onAddToCart(product.id, quantity); showToast("به سبد خرید اضافه شد"); onClose(); }} className="w-full border border-[var(--gold)]/50 text-[var(--gold)] hover:bg-[var(--gold)]/10 font-bold text-xs py-2 rounded-xl transition">
@@ -540,7 +524,7 @@ function ProductModal({
             </div>
 
             <div className="mt-5 border-t border-[var(--border)] pt-4">
-              <h3 className="text-sm font-bold mb-3">نظرات کاربران ({reviews.length})</h3>
+              <h3 className="text-sm font-bold mb-3">نظرات کاربران ({format(reviews.length)})</h3>
               {reviews.length === 0 ? (
                 <p className="text-[11px] text-[var(--muted)] text-center py-4">هنوز نظری ثبت نشده است.</p>
               ) : (
@@ -550,7 +534,7 @@ function ProductModal({
                       <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-bold">{r.user}</span>
-                          {r.verified && <span className="text-[8px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded">✓ خرید تأیید شده</span>}
+                          {r.verified && <span className="text-[8px] bg-[var(--green)]/15 text-[var(--green)] border border-[var(--green)]/30 px-1.5 py-0.5 rounded">✓ خرید تأیید شده</span>}
                         </div>
                         <div className="flex gap-0.5">
                           {[1, 2, 3, 4, 5].map(star => <StarIcon key={star} size={11} fill={star <= r.rating ? "#f59e0b" : "none"} />)}
@@ -598,7 +582,7 @@ function ProductCard({
         <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
           {p.isNew && <span className="text-[9px] font-bold bg-blue-500 text-white px-1.5 py-0.5 rounded shadow-sm">جدید</span>}
           {p.badge && <span className="text-[9px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded shadow-sm">{p.badge}</span>}
-          {p.discountPercent && <span className="text-[9px] font-bold bg-orange-500 text-white px-1.5 py-0.5 rounded shadow-sm">{format(p.discountPercent)}٪ تخفیف</span>}
+          {p.discountPercent && <span className="text-[9px] font-bold bg-orange-500 text-white px-1.5 py-0.5 rounded shadow-sm font-mono">{toFa(String(p.discountPercent))}٪ تخفیف</span>}
         </div>
         <span className="text-5xl sm:text-6xl transform group-hover:scale-110 transition-transform duration-300">{p.images[0]}</span>
         {isOut && <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center"><span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded">ناموجود</span></div>}
@@ -616,7 +600,7 @@ function ProductCard({
             {p.isVerified && <CheckBadgeIcon />}
             <span className="text-[10px] text-[var(--muted)] truncate">{p.seller}</span>
           </div>
-          <div className="flex items-center gap-2 mt-1 text-[9px] text-[var(--muted)]">
+          <div className="flex items-center gap-2 mt-1 text-[9px] text-[var(--muted)] font-mono">
             <span className="flex items-center gap-0.5"><EyeIcon /> {format(p.viewsToday)}</span>
             {isLow && <span className="text-amber-400 font-bold">· فقط {format(p.stock)} عدد</span>}
           </div>
@@ -624,12 +608,12 @@ function ProductCard({
         </div>
         <div className="mt-2.5 pt-2 border-t border-[var(--border)] flex items-end justify-between">
           <div>
-            {p.discountPercent && <div className="text-[10px] text-[var(--muted)] line-through">{format(subtotal)}</div>}
-            <div className="text-xs sm:text-sm font-bold text-[var(--gold)]">{format(finalPrice)} <span className="text-[9px] font-normal text-[var(--muted)]">ت</span></div>
+            {p.discountPercent && <div className="text-[10px] text-[var(--muted)] line-through font-mono">{format(subtotal)}</div>}
+            <div className="text-xs sm:text-sm font-bold text-[var(--gold)] font-mono">{format(finalPrice)} <span className="text-[9px] font-normal text-[var(--muted)]">ت</span></div>
           </div>
           <div className="flex flex-col items-end gap-0.5">
-            <div className="flex items-center gap-0.5 text-amber-500"><StarIcon /><span className="text-[10px] font-bold text-[var(--text)]">{p.rating}</span></div>
-            <span className="text-[9px] text-[var(--muted)]">({p.reviewsCount})</span>
+            <div className="flex items-center gap-0.5 text-amber-500"><StarIcon /><span className="text-[10px] font-bold text-[var(--text)] font-mono">{toFa(String(p.rating))}</span></div>
+            <span className="text-[9px] text-[var(--muted)] font-mono">({format(p.reviewsCount)})</span>
           </div>
         </div>
       </div>
@@ -655,7 +639,6 @@ export default function MarketPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [visibleCount, setVisibleCount] = useState(8);
 
-  // New states
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [compareList, setCompareList] = useState<string[]>([]);
@@ -738,20 +721,20 @@ export default function MarketPage() {
   };
 
   return (
-    <div className="px-2.5 sm:px-4 pt-3 pb-8">
+    <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
       
       {/* Header */}
       <div className="flex flex-col gap-3 mb-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <h1 className="font-bold text-lg sm:text-xl">بازار طلا و جواهر</h1>
+          <h1 className="font-bold text-lg sm:text-xl text-[var(--text)]">بازار طلا و جواهر</h1>
           <div className="flex items-center gap-1.5">
             <button onClick={() => setCompareOpen(true)} className="relative w-9 h-9 rounded-xl border bg-[var(--panel)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/50 flex items-center justify-center transition" title="مقایسه">
               <CompareIcon />
-              {compareList.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--gold)] text-black text-[9px] font-bold rounded-full flex items-center justify-center">{compareList.length}</span>}
+              {compareList.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--gold)] text-black text-[9px] font-bold rounded-full flex items-center justify-center font-mono">{toFa(String(compareList.length))}</span>}
             </button>
             <button onClick={() => setCartOpen(true)} className="relative w-9 h-9 rounded-xl border bg-[var(--panel)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/50 flex items-center justify-center transition" title="سبد خرید">
               <CartIcon />
-              {cartCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>}
+              {cartCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--red)] text-white text-[9px] font-bold rounded-full flex items-center justify-center font-mono">{toFa(String(cartCount))}</span>}
             </button>
             <button onClick={() => setShowWishlistOnly(!showWishlistOnly)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition ${showWishlistOnly ? "bg-red-500/10 border-red-500/50 text-red-500" : "bg-[var(--panel)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]"}`}>
               <HeartIcon fill={showWishlistOnly ? "currentColor" : "none"} /><span className="hidden sm:inline">علاقه‌مندی‌ها</span>
@@ -848,7 +831,7 @@ export default function MarketPage() {
       {/* Recently Viewed */}
       {recentlyViewedProducts.length > 0 && (
         <section className="mt-8">
-          <h2 className="font-bold text-sm mb-3 flex items-center gap-2">
+          <h2 className="font-bold text-sm mb-3 flex items-center gap-2 text-[var(--text)]">
             <span className="text-[var(--muted)]">🕒</span> بازدیدهای اخیر شما
           </h2>
           <div className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -857,7 +840,7 @@ export default function MarketPage() {
                 <div className={`h-20 bg-gradient-to-br ${p.color} flex items-center justify-center text-3xl`}>{p.images[0]}</div>
                 <div className="p-2">
                   <div className="text-[10px] font-bold line-clamp-1">{p.title}</div>
-                  <div className="text-[10px] font-bold text-[var(--gold)] mt-1">{format(calcPrice(p).finalPrice)} ت</div>
+                  <div className="text-[10px] font-bold text-[var(--gold)] mt-1 font-mono">{format(calcPrice(p).finalPrice)} ت</div>
                 </div>
               </div>
             ))}
@@ -877,9 +860,9 @@ export default function MarketPage() {
               <div>
                 <h3 className="text-xs font-bold mb-2">محدوده قیمت (تومان)</h3>
                 <div className="flex items-center gap-2">
-                  <input type="number" placeholder="از" value={minPrice} onChange={e => setMinPrice(e.target.value)} className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2 text-xs outline-none focus:border-[var(--gold)] text-[var(--text)]" />
+                  <input type="text" placeholder="از" value={minPrice} onChange={e => setMinPrice(toEnDigits(e.target.value).replace(/\D/g, ""))} className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2 text-xs outline-none focus:border-[var(--gold)] text-[var(--text)] font-mono text-center" />
                   <span className="text-[var(--muted)]">-</span>
-                  <input type="number" placeholder="تا" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2 text-xs outline-none focus:border-[var(--gold)] text-[var(--text)]" />
+                  <input type="text" placeholder="تا" value={maxPrice} onChange={e => setMaxPrice(toEnDigits(e.target.value).replace(/\D/g, ""))} className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2 text-xs outline-none focus:border-[var(--gold)] text-[var(--text)] font-mono text-center" />
                 </div>
               </div>
               <div>
@@ -923,7 +906,7 @@ export default function MarketPage() {
       {/* Compare floating bar */}
       {compareProducts.length > 0 && !compareOpen && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-[var(--panel)] border border-[var(--gold)]/40 rounded-full shadow-2xl px-3 py-2 flex items-center gap-2">
-          <span className="text-xs font-bold text-[var(--gold)]">{format(compareProducts.length)} محصول</span>
+          <span className="text-xs font-bold text-[var(--gold)] font-mono">{format(compareProducts.length)} محصول</span>
           <button onClick={() => setCompareOpen(true)} className="bg-[var(--gold)] text-black text-xs font-bold px-3 py-1.5 rounded-full">مقایسه</button>
           <button onClick={() => setCompareList([])} className="text-[var(--muted)] hover:text-red-400"><CloseIcon size={14} /></button>
         </div>

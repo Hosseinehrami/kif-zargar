@@ -13,7 +13,6 @@ export default function TermsPage() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [signing, setSigning] = useState(false);
-  const [shake, setShake] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,10 +46,7 @@ export default function TermsPage() {
       setSignature(result.signature);
     } else {
       setError(result.error || "خطا در امضا");
-      setShake(true);
-      await new Promise(r => setTimeout(r, 450));
       setPin("");
-      setShake(false);
     }
     setSigning(false);
   }
@@ -126,6 +122,7 @@ export default function TermsPage() {
             </div>
           </label>
 
+          {/* ✅ بخش کیبورد - این قسمت باید حتماً توی فایل تو باشه */}
           {agreed && (
             <div className="mb-3 fade-in">
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">کد امن (PIN)</label>
@@ -151,16 +148,7 @@ export default function TermsPage() {
                   {signing ? "..." : "تأیید"}
                 </button>
               </div>
-                            {error && <p className="text-[10px] text-red-400 text-center mt-2">{error}</p>}
-              
-              {/* 👇 این دکمه جدید */}
-              <button
-                type="button"
-                onClick={() => router.push("/auth/pin-recovery")}
-                className="w-full mt-3 text-[10px] text-[var(--muted)] hover:text-[var(--gold)] transition"
-              >
-                کد امن را فراموش کرده‌اید؟
-              </button>
+              {error && <p className="text-[10px] text-red-400 text-center mt-2">{error}</p>}
             </div>
           )}
 
@@ -184,10 +172,8 @@ export default function TermsPage() {
         </div>
       </div>
       <style>{`
-        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
-        .animate-shake { animation: shake 0.4s ease; }
-        .fade-in { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        .fade-in { animation: fadeIn 0.3s ease; }
       `}</style>
     </div>
   );

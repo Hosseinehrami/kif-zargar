@@ -3,10 +3,7 @@
 import { useState, useEffect, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
-const toEnDigits = (s: string) =>
-  s.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+import { format, toFa, toEnDigits } from "@/lib/format";
 
 // قوانین
 const MIN_WITHDRAW = 200_000;
@@ -36,7 +33,7 @@ function checkInstantWindow(): WindowStatus {
     const remaining = Math.ceil(INSTANT_START_HOUR - hour);
     return {
       allowed: false,
-      reason: `برداشت فوری از ساعت ۰۳:۰۰ صبح شروع می‌شود (${format(remaining)} ساعت دیگر)`,
+      reason: `برداشت فوری از ساعت ۰۳:۰۰ صبح شروع می‌شود (${toFa(String(remaining))} ساعت دیگر)`,
     };
   }
 
@@ -145,7 +142,7 @@ export default function WithdrawPage() {
 
   return (
     <>
-      <div className="px-2.5 sm:px-4 pt-3 pb-8">
+      <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans">
         {/* هدر */}
         <div className="flex items-center gap-2 mb-4">
           <button
@@ -171,9 +168,9 @@ export default function WithdrawPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[10px] text-[var(--muted)] mb-0.5">موجودی قابل برداشت</div>
-                  <div className="text-lg font-black text-[var(--text)]">
+                  <div className="text-lg font-black font-mono text-[var(--text)]">
                     {format(AVAILABLE_BALANCE)}
-                    <span className="text-[10px] font-normal text-[var(--muted)] mr-1">تومان</span>
+                    <span className="text-[10px] font-normal text-[var(--muted)] mr-1 font-sans">تومان</span>
                   </div>
                 </div>
                 <button
@@ -206,7 +203,7 @@ export default function WithdrawPage() {
                   {tab === "instant" && <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] mr-auto" />}
                 </div>
                 <div className="text-[9.5px] text-[var(--muted)] leading-relaxed">امروز واریز می‌شود</div>
-                <div className="mt-2 text-[10px] font-bold text-red-400">کارمزد ۱٪</div>
+                <div className="mt-2 text-[10px] font-bold text-[var(--red)]">کارمزد ۱٪</div>
                 <div className="text-[9px] text-[var(--muted)] mt-0.5">۰۳:۰۰ - ۱۲:۳۰</div>
               </button>
 
@@ -225,7 +222,7 @@ export default function WithdrawPage() {
                   {tab === "normal" && <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] mr-auto" />}
                 </div>
                 <div className="text-[9.5px] text-[var(--muted)] leading-relaxed">۲۴ تا ۷۲ ساعت</div>
-                <div className="mt-2 text-[10px] font-bold text-emerald-400">بدون کارمزد</div>
+                <div className="mt-2 text-[10px] font-bold text-[var(--green)]">بدون کارمزد</div>
                 <div className="text-[9px] text-[var(--muted)] mt-0.5">همیشه فعال</div>
               </button>
             </div>
@@ -258,9 +255,9 @@ export default function WithdrawPage() {
               <label className="text-[10px] text-[var(--muted)] block mb-1.5">مبلغ برداشت (تومان)</label>
               <div className={`rounded-xl border-2 bg-[var(--bg)] px-3 py-3 transition-all ${
                 amount && !isValid
-                  ? "border-red-500/50"
+                  ? "border-[var(--red)]/50"
                   : isValid
-                  ? "border-emerald-500/50"
+                  ? "border-[var(--green)]/50"
                   : "border-[var(--border)] focus-within:border-[var(--gold)]"
               }`}>
                 <input
@@ -269,33 +266,33 @@ export default function WithdrawPage() {
                   value={amount ? Number(amount).toLocaleString("en-US") : ""}
                   onChange={e => setAmount(toEnDigits(e.target.value).replace(/\D/g, ""))}
                   placeholder="حداقل ۲۰۰,۰۰۰ تومان"
-                  className="w-full bg-transparent text-center text-lg font-black text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
+                  className="w-full bg-transparent text-center text-lg font-black font-mono text-[var(--text)] placeholder:text-[var(--muted)] placeholder:font-normal placeholder:text-sm outline-none"
                   dir="ltr"
                 />
               </div>
 
               {amountNum > 0 && amountNum < MIN_WITHDRAW && (
-                <p className="text-[10px] text-red-400 mt-1.5">حداقل مبلغ برداشت {format(MIN_WITHDRAW)} تومان است</p>
+                <p className="text-[10px] text-[var(--red)] mt-1.5">حداقل مبلغ برداشت {format(MIN_WITHDRAW)} تومان است</p>
               )}
               {!enoughBalance && (
-                <p className="text-[10px] text-red-400 mt-1.5">مبلغ بیشتر از موجودی قابل برداشت است</p>
+                <p className="text-[10px] text-[var(--red)] mt-1.5">مبلغ بیشتر از موجودی قابل برداشت است</p>
               )}
 
               {amountNum > 0 && isValid && (
                 <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-1.5">
                   <div className="flex justify-between text-[11px]">
                     <span className="text-[var(--muted)]">مبلغ درخواستی</span>
-                    <span className="font-semibold text-[var(--text)]">{format(amountNum)} تومان</span>
+                    <span className="font-semibold text-[var(--text)] font-mono">{format(amountNum)} تومان</span>
                   </div>
                   {tab === "instant" && (
                     <div className="flex justify-between text-[11px]">
                       <span className="text-[var(--muted)]">کارمزد فوری (۱٪)</span>
-                      <span className="font-semibold text-red-400">−{format(fee)} تومان</span>
+                      <span className="font-semibold text-[var(--red)] font-mono">−{format(fee)} تومان</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs font-bold border-t border-[var(--border)] pt-1.5">
                     <span className="text-[var(--text)]">مبلغ واریزی به حساب</span>
-                    <span className="text-emerald-400">{format(finalAmount)} تومان</span>
+                    <span className="text-[var(--green)] font-mono">{format(finalAmount)} تومان</span>
                   </div>
                 </div>
               )}
@@ -361,9 +358,9 @@ export default function WithdrawPage() {
                   onChange={e => handlePinDigit(i, e.target.value)}
                   onKeyDown={e => handlePinBackspace(i, e)}
                   autoFocus={i === 0}
-                  className={`w-12 h-14 text-center text-xl font-black rounded-xl border-2 outline-none transition-all ${
+                  className={`w-12 h-14 text-center text-xl font-black font-mono rounded-xl border-2 outline-none transition-all ${
                     pinError
-                      ? "border-red-500 text-red-400"
+                      ? "border-[var(--red)] text-[var(--red)]"
                       : d
                       ? "border-[var(--gold)] text-[var(--gold)] bg-[var(--gold)]/10"
                       : "border-[var(--border)] text-[var(--text)] bg-[var(--bg)] focus:border-[var(--gold)]"
@@ -372,22 +369,22 @@ export default function WithdrawPage() {
               ))}
             </div>
 
-            {pinError && <p className="text-[10px] text-red-400 text-center mb-3">{pinError}</p>}
+            {pinError && <p className="text-[10px] text-[var(--red)] text-center mb-3">{pinError}</p>}
 
             <div className="bg-[var(--panel-2)] rounded-lg p-2.5 mb-4 text-[10px] text-[var(--muted)]">
               <div className="flex justify-between">
                 <span>مبلغ برداشت</span>
-                <span className="text-[var(--text)] font-bold">{format(amountNum)} تومان</span>
+                <span className="text-[var(--text)] font-bold font-mono">{format(amountNum)} تومان</span>
               </div>
               {tab === "instant" && (
                 <div className="flex justify-between mt-1">
                   <span>کارمزد</span>
-                  <span className="text-red-400">−{format(fee)} تومان</span>
+                  <span className="text-[var(--red)] font-mono">−{format(fee)} تومان</span>
                 </div>
               )}
               <div className="flex justify-between mt-1 pt-1 border-t border-[var(--border)]">
                 <span>واریزی به حساب</span>
-                <span className="text-emerald-400 font-bold">{format(finalAmount)} تومان</span>
+                <span className="text-[var(--green)] font-bold font-mono">{format(finalAmount)} تومان</span>
               </div>
             </div>
 
@@ -404,9 +401,9 @@ export default function WithdrawPage() {
         {step === "success" && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-6 text-center">
             <div className="relative inline-block mb-4">
-              <div className="absolute inset-0 bg-emerald-500 opacity-30 rounded-full blur-xl animate-pulse" />
-              <div className="relative w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <div className="absolute inset-0 bg-[var(--green)] opacity-30 rounded-full blur-xl animate-pulse" />
+              <div className="relative w-16 h-16 rounded-full bg-[var(--green)]/20 border-2 border-[var(--green)] flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--green)]">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
@@ -421,7 +418,7 @@ export default function WithdrawPage() {
             <div className="bg-[var(--panel-2)] border border-[var(--border)] rounded-xl p-3 mb-5 text-right space-y-1.5">
               <div className="flex justify-between text-[10.5px]">
                 <span className="text-[var(--muted)]">مبلغ</span>
-                <span className="font-bold text-[var(--gold)]">{format(finalAmount)} تومان</span>
+                <span className="font-bold text-[var(--gold)] font-mono">{format(finalAmount)} تومان</span>
               </div>
               <div className="flex justify-between text-[10.5px]">
                 <span className="text-[var(--muted)]">به حساب</span>

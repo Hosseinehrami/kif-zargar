@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { format, toFa } from "@/lib/format";
+import { SETTINGS } from "@/lib/settings";
 
-const format = (n: number) => Math.round(n).toLocaleString("fa-IR");
 const periods = ["۱ ساعت", "۴ ساعت", "۱ روز", "۱ هفته", "۱ ماه"];
 
 // ---------- Icons ----------
@@ -62,10 +63,10 @@ function Chart() {
         <svg viewBox="0 0 600 240" preserveAspectRatio="none" className="candles">
           {[35, 80, 125, 170, 215].map((y) => <line key={y} x1="0" y1={y} x2="600" y2={y} className="chart-grid" />)}
           {candles.map(([open, close, high, low], i) => {
-            const up = close >= open; const color = up ? "#239B72" : "#DC5959"; const x = 12 + i * 24; const top = Math.min(open, close); const height = Math.max(5, Math.abs(close - open));
+            const up = close >= open; const color = up ? "var(--green)" : "var(--red)"; const x = 12 + i * 24; const top = Math.min(open, close); const height = Math.max(5, Math.abs(close - open));
             return (<g key={i}><line x1={x + 5} x2={x + 5} y1={high} y2={low} stroke={color} strokeWidth="1.5" /><rect x={x} y={top} width="11" height={height} rx="1" fill={color} /></g>);
           })}
-          <path d="M0 190 C70 175 100 180 150 145 S240 130 290 105 S390 110 430 72 S520 65 600 30" fill="none" stroke="#C4A875" strokeWidth="1.5" opacity=".7" />
+          <path d="M0 190 C70 175 100 180 150 145 S240 130 290 105 S390 110 430 72 S520 65 600 30" fill="none" stroke="var(--gold)" strokeWidth="1.5" opacity=".7" />
         </svg>
       </div>
       <div dir="ltr" className="chart-bottom"><span>۱۰:۰۰</span><span>۱۲:۰۰</span><span>۱۴:۰۰</span><span>۱۶:۰۰</span><span>۱۸:۰۰</span></div>
@@ -102,28 +103,44 @@ function LivePriceCard({ initialData }: { initialData: LivePrice }) {
   }, [data.price]);
 
   return (
-    <div className={`rounded-xl border bg-[var(--panel)] p-2.5 transition-all duration-300 ${flash === "up" ? "border-emerald-500/50 bg-emerald-500/10" : flash === "down" ? "border-red-500/50 bg-red-500/10" : "border-[var(--border)]"}`}>
+    <div className={`rounded-xl border bg-[var(--panel)] p-2.5 transition-all duration-300 ${
+      flash === "up"
+        ? "border-[var(--green)]/50 bg-[var(--green)]/10"
+        : flash === "down"
+        ? "border-[var(--red)]/50 bg-[var(--red)]/10"
+        : "border-[var(--border)]"
+    }`}>
       <span className="text-xs text-[var(--muted)] font-medium">{data.name}</span>
       <div className="mt-1.5">
-        <strong className={`block text-sm font-bold transition-colors duration-300 ${flash === "up" ? "text-emerald-400" : flash === "down" ? "text-red-400" : "text-[var(--text)]"}`}>{format(data.price)}</strong>
+        <strong className={`block text-sm font-bold font-mono transition-colors duration-300 ${
+          flash === "up"
+            ? "text-[var(--green)]"
+            : flash === "down"
+            ? "text-[var(--red)]"
+            : "text-[var(--text)]"
+        }`}>{format(data.price)}</strong>
         <div className="flex items-center justify-between text-[11px] mt-1">
-          <span className="text-[var(--muted)]">{data.unit}</span>
-          <span className={data.change >= 0 ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>{data.change >= 0 ? "+" : ""}{data.change.toFixed(2)}٪</span>
+          <span className="text-[var(--muted)] font-sans">{data.unit}</span>
+          <span className={`font-bold font-mono ${
+            data.change >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"
+          }`}>{data.change >= 0 ? "+" : ""}{toFa(data.change.toFixed(2))}٪</span>
         </div>
       </div>
     </div>
   );
 }
 
+const goldPrice = SETTINGS.fees.goldPrice;
+
 const INITIAL_LIVE_PRICES: LivePrice[] = [
-  { name: "طلای ۱۸ عیار", price: 19080000, unit: "گرم", change: 1.25 },
-  { name: "مظنه (آبشده)", price: 82650000, unit: "مثقال", change: -0.31 },
-  { name: "سکه امامی", price: 185000000, unit: "عدد", change: 1.10 },
-  { name: "بهار آزادی", price: 175000000, unit: "عدد", change: 0.95 },
-  { name: "نیم سکه", price: 95000000, unit: "عدد", change: 0.70 },
-  { name: "ربع سکه", price: 52000000, unit: "عدد", change: 0.50 },
-  { name: "دلار", price: 62000, unit: "دلار", change: -0.15 },
-  { name: "تتر", price: 61500, unit: "تتر", change: 0.10 },
+  { name: "طلای ۱۸ عیار", price: goldPrice, unit: "گرم", change: 1.25 },
+  { name: "مظنه (آبشده)", price: 82_650_000, unit: "مثقال", change: -0.31 },
+  { name: "سکه امامی", price: 185_000_000, unit: "عدد", change: 1.10 },
+  { name: "بهار آزادی", price: 175_000_000, unit: "عدد", change: 0.95 },
+  { name: "نیم سکه", price: 95_000_000, unit: "عدد", change: 0.70 },
+  { name: "ربع سکه", price: 52_000_000, unit: "عدد", change: 0.50 },
+  { name: "دلار", price: 62_000, unit: "دلار", change: -0.15 },
+  { name: "تتر", price: 61_500, unit: "تتر", change: 0.10 },
 ];
 
 const myAssets = [
@@ -148,7 +165,6 @@ export default function Home() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [bannerIdx, setBannerIdx] = useState(0);
   
-  // استیت برای کپی آدرس
   const [copied, setCopied] = useState(false);
   const walletAddress = "KFZ-1234-5678-90";
 
@@ -164,9 +180,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="dashboard !pt-3 sm:!pt-5">
+    <div className="dashboard !pt-3 sm:!pt-5 font-sans">
       
-      {/* ===== کارت کیف پول (تغییر یافته) ===== */}
+      {/* ===== کارت کیف پول ===== */}
       <section className="relative rounded-2xl bg-[#1c1e22] dark:bg-[#131518] border border-[#2d3136] shadow-xl mb-3 transition-all duration-300">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[var(--gold)] opacity-10 rounded-full blur-3xl pointer-events-none" />
 
@@ -193,19 +209,22 @@ export default function Home() {
               <>
                 <div className="text-center mt-1 mb-4">
                   <div className="text-gray-400 text-xs mb-1">موجودی کل دارایی شما</div>
-                  <div className="text-white text-2xl sm:text-3xl font-bold tracking-wide flex items-center justify-center gap-2 dir-rtl">
-                    {format(845620000)}
-                    <span className="text-xs font-normal text-gray-400">تومان</span>
+                  <div className="text-white text-2xl sm:text-3xl font-bold tracking-wide flex items-center justify-center gap-2 dir-rtl font-mono">
+                    {format(845_620_000)}
+                    <span className="text-xs font-normal text-gray-400 font-sans">تومان</span>
                   </div>
                 </div>
                 
-                {/* آدرس کیف پول و دکمه کپی */}
                 <div className="bg-black/20 rounded-xl p-2.5 border border-white/5 flex items-center justify-between mb-4">
                   <div className="flex flex-col">
                     <span className="text-[10px] text-gray-400 mb-0.5">آدرس کیف پول (برای دریافت وجه)</span>
                     <span className="font-mono text-sm text-white font-bold tracking-wider" dir="ltr">{walletAddress}</span>
                   </div>
-                  <button onClick={handleCopy} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${copied ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-[var(--gold)] hover:bg-white/10"}`} title="کپی آدرس">
+                  <button onClick={handleCopy} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                    copied
+                      ? "bg-[var(--green)]/20 text-[var(--green)]"
+                      : "bg-white/5 text-[var(--gold)] hover:bg-white/10"
+                  }`} title="کپی آدرس">
                     {copied ? <CheckIcon /> : <CopyIcon />}
                   </button>
                 </div>
@@ -217,7 +236,7 @@ export default function Home() {
                   </div>
                   <div className="text-gray-300 text-[11px] flex items-center gap-1.5">
                     <span>موجودی طلا:</span>
-                    <span className="text-[var(--gold)] font-bold text-xs">۱۲.۴۵۰ گرم</span>
+                    <span className="text-[var(--gold)] font-bold text-xs font-mono">{toFa("12.450")} گرم</span>
                   </div>
                 </div>
               </>
@@ -229,8 +248,8 @@ export default function Home() {
                     <div key={i} className="flex items-center justify-between text-xs py-2">
                       <span className="text-gray-300">{asset.name}</span>
                       <div className="text-left">
-                        <div className="text-white font-semibold">{asset.amount}</div>
-                        <div className="text-gray-500 text-[10px] mt-0.5">{asset.value} تومان</div>
+                        <div className="text-white font-semibold font-mono">{asset.amount}</div>
+                        <div className="text-gray-500 text-[10px] mt-0.5 font-mono">{asset.value} تومان</div>
                       </div>
                     </div>
                   ))}
@@ -241,7 +260,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== دکمه‌های عملیات (فعال شدند) ===== */}
+      {/* ===== دکمه‌های عملیات ===== */}
       <section className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-5">
         <button onClick={() => router.push("/wallet/deposit")} className="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-[var(--panel)] border border-[var(--border)] py-2.5 hover:border-[var(--gold)]/50 transition group">
           <div className="text-[var(--muted)] group-hover:text-[var(--gold)] transition"><DepositIcon /></div>
@@ -279,7 +298,11 @@ export default function Home() {
           </div>
           <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
             {banners.map((_, i) => (
-              <button key={i} onClick={() => setBannerIdx(i)} aria-label={`اسلاید ${i + 1}`} className={`h-1.5 rounded-full transition-all duration-300 ${i === bannerIdx ? "w-7 bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]" : "w-2 bg-white/40 hover:bg-white/60"}`} />
+              <button key={i} onClick={() => setBannerIdx(i)} aria-label={`اسلاید ${i + 1}`} className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === bannerIdx
+                  ? "w-7 bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+                  : "w-2 bg-white/40 hover:bg-white/60"
+              }`} />
             ))}
           </div>
         </div>
@@ -290,7 +313,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-bold text-sm">تابلو قیمت زنده</h2>
           <span className="text-xs text-[var(--muted)] flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> آنلاین
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" /> آنلاین
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -302,10 +325,10 @@ export default function Home() {
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-3 sm:p-4 mb-4">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-bold text-sm">نمودار قیمت طلای ۱۸</h2>
-          <div className="chart-change positive text-xs font-bold">+۱.۲۵٪</div>
+          <div className="text-xs font-bold text-[var(--green)] font-mono">+۱.۲۵٪</div>
         </div>
-        <div className="chart-price text-base sm:text-lg font-bold mb-2">
-          {format(19080000)} <small className="text-[10px] text-[var(--muted)]">تومان</small>
+        <div className="text-base sm:text-lg font-bold mb-2 font-mono">
+          {format(goldPrice)} <small className="text-[10px] text-[var(--muted)] font-sans">تومان</small>
         </div>
         <div className="periods mb-2">
           {periods.map(p => (
@@ -315,25 +338,33 @@ export default function Home() {
         <Chart />
       </section>
 
-      {/* ===== آخرین فعالیت‌ها (لینک به سفارشات) ===== */}
+      {/* ===== آخرین فعالیت‌ها ===== */}
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-3 sm:p-4 mb-2">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-bold text-sm">آخرین فعالیت‌ها</h2>
           <button onClick={() => router.push("/orders")} className="text-xs text-[var(--gold)]">مشاهده همه</button>
         </div>
         <div className="flex items-center gap-2.5 py-2 border-b border-[var(--border)]">
-          <span className="w-8 h-8 rounded-lg bg-[var(--panel-2)] text-emerald-500 flex items-center justify-center text-xs shrink-0">↙</span>
-          <div className="flex-1"><div className="text-xs font-bold">خرید طلا</div><div className="text-[10px] text-[var(--muted)] mt-0.5">امروز · ۱۲:۴۰</div></div>
-          <b className="text-xs text-emerald-500">+۲.۵ گرم</b>
+          <span className="w-8 h-8 rounded-lg bg-[var(--panel-2)] text-[var(--green)] flex items-center justify-center text-xs shrink-0">↙</span>
+          <div className="flex-1">
+            <div className="text-xs font-bold">خرید طلا</div>
+            <div className="text-[10px] text-[var(--muted)] mt-0.5">امروز · ۱۲:۴۰</div>
+          </div>
+          <b className="text-xs text-[var(--green)] font-mono">+{toFa("2.5")} گرم</b>
         </div>
         <div className="flex items-center gap-2.5 py-2">
           <span className="w-8 h-8 rounded-lg bg-[var(--panel-2)] text-amber-500 flex items-center justify-center text-xs shrink-0">⇄</span>
-          <div className="flex-1"><div className="text-xs font-bold">انتقال طلا</div><div className="text-[10px] text-[var(--muted)] mt-0.5">دیروز · ۱۶:۲۰</div></div>
-          <b className="text-xs text-red-400">−۱ گرم</b>
+          <div className="flex-1">
+            <div className="text-xs font-bold">انتقال طلا</div>
+            <div className="text-[10px] text-[var(--muted)] mt-0.5">دیروز · ۱۶:۲۰</div>
+          </div>
+          <b className="text-xs text-[var(--red)] font-mono">−{toFa("1")} گرم</b>
         </div>
       </section>
 
-      <footer className="footer">کیف زرگر · مدیریت هوشمند دارایی طلا</footer>
+      <footer className="text-center py-3 text-[10px] text-[var(--muted)]">
+        کیف زرگر · مدیریت هوشمند دارایی طلا
+      </footer>
     </div>
   );
 }

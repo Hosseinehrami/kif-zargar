@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { toFa } from "@/lib/format";
 
 type ModalType = "set" | "change" | "remove" | null;
 
@@ -12,7 +13,7 @@ export default function SettingsPage() {
   const [modal, setModal] = useState<ModalType>(null);
 
   return (
-    <div className="px-2.5 sm:px-4 pt-3 pb-8" dir="rtl">
+    <div className="px-2.5 sm:px-4 pt-3 pb-8 font-sans" dir="rtl">
       <div className="mb-4">
         <h1 className="font-bold text-lg sm:text-xl mb-1">تنظیمات</h1>
         <p className="text-[11px] text-[var(--muted)]">مدیریت حساب و امنیت</p>
@@ -21,18 +22,14 @@ export default function SettingsPage() {
       {/* بخش امنیت */}
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] overflow-hidden mb-3">
         <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--panel-2)]/50">
-          <h2 className="font-bold text-sm flex items-center gap-2">
-            🔒 امنیت
-          </h2>
+          <h2 className="font-bold text-sm flex items-center gap-2">🔒 امنیت</h2>
         </div>
 
         <button
           onClick={() => setModal(hasPin ? "change" : "set")}
           className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--panel-2)] transition text-right"
         >
-          <div className="w-10 h-10 rounded-xl bg-[var(--gold)]/10 flex items-center justify-center text-lg shrink-0">
-            🔐
-          </div>
+          <div className="w-10 h-10 rounded-xl bg-[var(--gold)]/10 flex items-center justify-center text-lg shrink-0">🔐</div>
           <div className="flex-1 min-w-0">
             <div className="text-xs font-bold">کد امن</div>
             <div className="text-[10px] text-[var(--muted)] mt-0.5">
@@ -40,22 +37,20 @@ export default function SettingsPage() {
             </div>
           </div>
           {hasPin ? (
-            <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded-lg">فعال</span>
+            <span className="text-[10px] bg-[var(--green)]/15 text-[var(--green)] border border-[var(--green)]/30 px-2 py-1 rounded-lg font-bold">فعال</span>
           ) : (
-            <span className="text-[10px] bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-1 rounded-lg">غیرفعال</span>
+            <span className="text-[10px] bg-[var(--red)]/15 text-[var(--red)] border border-[var(--red)]/30 px-2 py-1 rounded-lg font-bold">غیرفعال</span>
           )}
         </button>
 
         {hasPin && (
           <button
             onClick={() => setModal("remove")}
-            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-500/5 border-t border-[var(--border)] transition text-right"
+            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--red)]/5 border-t border-[var(--border)] transition text-right"
           >
-            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-lg shrink-0">
-              🗑️
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-[var(--red)]/10 flex items-center justify-center text-lg shrink-0">🗑️</div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-bold text-red-400">غیرفعال کردن کد امن</div>
+              <div className="text-xs font-bold text-[var(--red)]">غیرفعال کردن کد امن</div>
               <div className="text-[10px] text-[var(--muted)] mt-0.5">حذف کد امن فعلی</div>
             </div>
           </button>
@@ -65,11 +60,9 @@ export default function SettingsPage() {
       {/* اطلاعات حساب */}
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] overflow-hidden mb-3">
         <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--panel-2)]/50">
-          <h2 className="font-bold text-sm flex items-center gap-2">
-            👤 اطلاعات حساب
-          </h2>
+          <h2 className="font-bold text-sm flex items-center gap-2">👤 اطلاعات حساب</h2>
         </div>
-        <div className="px-4 py-3 space-y-2 text-xs">
+        <div className="px-4 py-3 space-y-2.5 text-xs">
           <div className="flex justify-between">
             <span className="text-[var(--muted)]">نام</span>
             <span className="font-bold">{user?.firstName} {user?.lastName}</span>
@@ -89,7 +82,6 @@ export default function SettingsPage() {
         نسخه ۰.۱ · کیف زرگر
       </div>
 
-      {/* Modals */}
       {modal === "set" && <SetPinModal onClose={() => setModal(null)} onSave={setPin} />}
       {modal === "change" && <ChangePinModal onClose={() => setModal(null)} onSave={changePin} />}
       {modal === "remove" && <RemovePinModal onClose={() => setModal(null)} onRemove={removePin} />}
@@ -144,7 +136,7 @@ function SetPinModal({ onClose, onSave }: { onClose: () => void; onSave: (pin: s
 
       <Dots value={stage === "enter" ? pin : confirm} />
 
-      {error && <p className="text-[11px] text-red-400 text-center mt-2 mb-2">{error}</p>}
+      {error && <p className="text-[11px] text-[var(--red)] text-center mt-2 mb-2">{error}</p>}
 
       <Keypad
         onDigit={d => pushDigit(d, stage === "enter" ? "pin" : "confirm")}
@@ -209,7 +201,7 @@ function ChangePinModal({ onClose, onSave }: { onClose: () => void; onSave: (o: 
 
       <Dots value={currentValue} />
 
-      {error && <p className="text-[11px] text-red-400 text-center mt-2 mb-2">{error}</p>}
+      {error && <p className="text-[11px] text-[var(--red)] text-center mt-2 mb-2">{error}</p>}
 
       <Keypad onDigit={pushDigit} onBackspace={backspace} />
 
@@ -241,7 +233,7 @@ function RemovePinModal({ onClose, onRemove }: { onClose: () => void; onRemove: 
   return (
     <ModalShell onClose={onClose} title="غیرفعال کردن کد امن">
       <div className="text-center mb-4">
-        <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-red-500/15 border-2 border-red-500/40 flex items-center justify-center text-xl">⚠️</div>
+        <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[var(--red)]/15 border-2 border-[var(--red)]/40 flex items-center justify-center text-xl">⚠️</div>
         <p className="text-[11px] text-[var(--muted)] leading-relaxed">
           بعد از غیرفعال کردن، هر کسی که گوشی شما را باز کند به حساب دسترسی خواهد داشت.
         </p>
@@ -250,14 +242,14 @@ function RemovePinModal({ onClose, onRemove }: { onClose: () => void; onRemove: 
       <div className="text-center text-[11px] text-[var(--muted)] mb-2">کد امن فعلی را وارد کنید</div>
       <Dots value={pin} />
 
-      {error && <p className="text-[11px] text-red-400 text-center mt-2 mb-2">{error}</p>}
+      {error && <p className="text-[11px] text-[var(--red)] text-center mt-2 mb-2">{error}</p>}
 
       <Keypad onDigit={d => { if (pin.length < 4) { setPin(pin + d); setError(""); } }} onBackspace={() => { setPin(pin.slice(0, -1)); setError(""); }} />
 
       <button
         onClick={confirm}
         disabled={removing || pin.length !== 4}
-        className="w-full mt-4 h-11 rounded-xl bg-red-500 text-white font-bold text-sm disabled:opacity-40"
+        className="w-full mt-4 h-11 rounded-xl bg-[var(--red)] text-white font-bold text-sm disabled:opacity-40"
       >
         {removing ? "..." : "غیرفعال کن"}
       </button>
@@ -310,21 +302,21 @@ function Keypad({ onDigit, onBackspace }: { onDigit: (d: string) => void; onBack
         <button
           key={n}
           onClick={() => onDigit(String(n))}
-          className="aspect-square rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--gold)]/50 hover:bg-[var(--panel-2)] text-lg font-bold text-[var(--text)] transition active:scale-95"
+          className="aspect-square rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--gold)]/50 hover:bg-[var(--panel-2)] text-lg font-bold font-mono text-[var(--text)] transition active:scale-95"
         >
-          {n}
+          {toFa(String(n))}
         </button>
       ))}
-      <div /> {/* فضای خالی سمت چپ */}
+      <div />
       <button
         onClick={() => onDigit("0")}
-        className="aspect-square rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--gold)]/50 hover:bg-[var(--panel-2)] text-lg font-bold text-[var(--text)] transition active:scale-95"
+        className="aspect-square rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--gold)]/50 hover:bg-[var(--panel-2)] text-lg font-bold font-mono text-[var(--text)] transition active:scale-95"
       >
-        0
+        {toFa("0")}
       </button>
       <button
         onClick={onBackspace}
-        className="aspect-square rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-red-500/50 hover:bg-red-500/10 flex items-center justify-center transition active:scale-95"
+        className="aspect-square rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--red)]/50 hover:bg-[var(--red)]/10 flex items-center justify-center transition active:scale-95"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
