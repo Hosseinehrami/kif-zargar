@@ -20,9 +20,7 @@ export default function VerifyPage() {
   useEffect(() => {
     if (!isLoggedIn) router.replace("/auth/login");
     else if (isVerified && !transitioning) {
-      // اگر قبلاً تایید شده، بر اساس وضعیت PIN و قوانین هدایت شود
-      // این منطق در Appshell یا صفحات بعدی هم هست، ولی اینجا هم برای اطمینان
-      // router.replace("/auth/pin"); // یا مسیر مناسب
+      // redirect logic
     }
   }, [isLoggedIn, isVerified, transitioning, router]);
 
@@ -41,8 +39,6 @@ export default function VerifyPage() {
     if (result.success) {
       setState("success");
       setTimeout(() => {
-        // بعد از KYC موفق، همیشه به صفحه PIN برو
-        // اگر PIN نداشته باشد، آنجا تنظیم می‌کند؛ اگر داشته باشد، وارد می‌شود
         router.replace("/auth/pin");
       }, 1400);
     } else {
@@ -61,8 +57,9 @@ export default function VerifyPage() {
 
   if (state === "verifying") {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)] px-4" dir="rtl">
-        <div className="w-full max-w-sm text-center">
+      // 👇 تغییر: حذف justify-center و اضافه کردن pt-12
+      <div className="min-h-dvh flex flex-col pt-12 sm:pt-20 bg-[var(--bg)] px-4" dir="rtl">
+        <div className="w-full max-w-sm mx-auto text-center">
           {progressBar}
           <div className="w-16 h-16 mx-auto rounded-full bg-sky-500/10 border-2 border-sky-500/40 flex items-center justify-center mb-4">
             <span className="w-8 h-8 border-2 border-sky-400/30 border-t-sky-400 rounded-full animate-spin" />
@@ -80,8 +77,9 @@ export default function VerifyPage() {
 
   if (state === "success") {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)] px-4" dir="rtl">
-        <div className="w-full max-w-sm text-center">
+      // 👇 تغییر: حذف justify-center و اضافه کردن pt-12
+      <div className="min-h-dvh flex flex-col pt-12 sm:pt-20 bg-[var(--bg)] px-4" dir="rtl">
+        <div className="w-full max-w-sm mx-auto text-center">
           {progressBar}
           <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center mb-4">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -97,13 +95,16 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)] px-4" dir="rtl">
-      <div className="w-full max-w-sm">
+    // 👇 تغییر: حذف justify-center و اضافه کردن pt-12
+    <div className="min-h-dvh flex flex-col pt-12 sm:pt-20 bg-[var(--bg)] px-4" dir="rtl">
+      <div className="w-full max-w-sm mx-auto">
         {progressBar}
         <div className="text-center mb-5">
-          <div className="text-2xl font-black text-[var(--gold)] font-serif italic tracking-widest mb-1">KIFE ZARGAR</div>
-          <h1 className="text-base font-bold mt-3">احراز هویت</h1>
-          <p className="text-[10.5px] text-[var(--muted)] mt-1 leading-relaxed">کد ملی خود را وارد کنید تا با شماره موبایل شما تطبیق داده شود.</p>
+          {/* 👇 لوگوی متنی از اینجا حذف شد */}
+          <h1 className="text-lg font-bold mt-1">احراز هویت</h1>
+          <p className="text-[11px] text-[var(--muted)] mt-1.5 leading-relaxed">
+            کد ملی خود را وارد کنید تا با شماره موبایل شما تطبیق داده شود.
+          </p>
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4">

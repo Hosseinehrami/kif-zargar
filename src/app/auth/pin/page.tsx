@@ -27,7 +27,6 @@ export default function PinPage() {
   const [lockRemain, setLockRemain] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // رفرنس برای جلوگیری از اجرای دوباره auto-submit
   const hasSubmitted = useRef(false);
 
   useEffect(() => {
@@ -50,8 +49,7 @@ export default function PinPage() {
     return () => clearInterval(t);
   }, [lockedUntil]);
 
-  // بررسی خودکار بعد از وارد کردن ۴ رقم
-   useEffect(() => {
+  useEffect(() => {
     if (pin.length === 4 && !lockedUntil && !hasSubmitted.current) {
       hasSubmitted.current = true;
       handleVerify();
@@ -69,21 +67,19 @@ export default function PinPage() {
     if (lockedUntil || isVerifying) return;
     setPin((prev) => prev.slice(0, -1));
     setError("");
-    hasSubmitted.current = false; // اجازه دوباره برای تایید
+    hasSubmitted.current = false;
   }
 
   async function handleVerify() {
     setIsVerifying(true);
     setError("");
 
-    // ۱. تنظیم اولیه PIN
     if (!hasPin) {
       try {
         await savePin(pin);
-        // بعد از ذخیره، برو به قوانین
         router.replace("/auth/terms");
         return;
-            } catch (e: unknown) {
+      } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "خطا در تنظیم کد امن");
         setShake(true);
         await new Promise((r) => setTimeout(r, 400));
@@ -95,12 +91,10 @@ export default function PinPage() {
       }
     }
 
-    // ۲. ورود با PIN
     const correct = validatePin(pin);
     if (correct) {
       unlockSession();
       
-      // یک تاخیر کوچک برای اطمینان از اینکه sessionStorage ذخیره شده
       setTimeout(() => {
         if (!isVerified) {
           router.replace("/auth/verify");
@@ -113,7 +107,6 @@ export default function PinPage() {
       return;
     }
 
-    // ۳. PIN اشتباه
     const newAttempts = attempts + 1;
     setAttempts(newAttempts);
     setShake(true);
@@ -138,19 +131,18 @@ export default function PinPage() {
     : "برای دسترسی به حساب، کد ۴ رقمی خود را وارد کنید";
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-[var(--bg)] px-4" dir="rtl">
-      <div className="w-full max-w-sm">
+    // 👇 تغییر: حذف justify-center و items-center و اضافه کردن pt-12
+    <div className="min-h-dvh flex flex-col pt-12 sm:pt-20 bg-[var(--bg)] px-4" dir="rtl">
+      <div className="w-full max-w-sm mx-auto">
         <div className="text-center mb-6">
-          <div className="text-2xl font-black text-[var(--gold)] font-serif italic tracking-widest mb-1">
-            KIFE ZARGAR
-          </div>
-          <h1 className="text-base font-bold mt-3">{title}</h1>
-          <p className="text-[10.5px] text-[var(--muted)] mt-1 leading-relaxed">
+          {/* 👇 لوگوی متنی از اینجا حذف شد */}
+          <h1 className="text-lg font-bold mt-3">{title}</h1>
+          <p className="text-[11px] text-[var(--muted)] mt-1.5 leading-relaxed">
             {subtitle}
           </p>
         </div>
 
-        <div className={`flex justify-center gap-2 mb-4 ${shake ? "animate-shake" : ""}`} dir="ltr">
+        <div className={`flex justify-center gap-2 mb-6 ${shake ? "animate-shake" : ""}`} dir="ltr">
           {[0, 1, 2, 3].map((i) => {
             const filled = i < pin.length;
             return (
@@ -170,9 +162,9 @@ export default function PinPage() {
           })}
         </div>
 
-        {error && <p className="text-[10px] text-red-400 text-center mb-3">{error}</p>}
+        {error && <p className="text-[11px] text-red-400 text-center mb-3">{error}</p>}
         {isLocked && (
-          <p className="text-[10px] text-amber-400 text-center mb-3">
+          <p className="text-[11px] text-amber-400 text-center mb-3">
             {lockRemain} ثانیه صبر کنید
           </p>
         )}
@@ -227,7 +219,7 @@ export default function PinPage() {
         {hasPin && (
           <button
             onClick={() => router.push("/auth/pin-recovery")}
-            className="w-full mt-4 text-[10px] text-[var(--muted)] hover:text-[var(--gold)] transition"
+            className="w-full mt-5 text-[10.5px] text-[var(--muted)] hover:text-[var(--gold)] transition"
           >
             کد امن را فراموش کرده‌اید؟
           </button>
