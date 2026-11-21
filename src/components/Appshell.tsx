@@ -89,7 +89,6 @@ const PREVIEW_NOTIFS = [
   { emoji: "📈", title: "هشدار قیمت طلا", time: "۱۵ دقیقه پیش" },
   { emoji: "🔔", title: "به‌روزرسانی اپلیکیشن", time: "۱ ساعت پیش" },
 ];
-const UNREAD_COUNT = 3;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -98,6 +97,33 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [mounted, setMounted] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(3);
+
+  useEffect(() => {
+    const updateUnreadCount = () => {
+      try {
+        const saved = localStorage.getItem(`kif-notifications-v1:${user?.phone || "guest"}`);
+        const readMap = saved ? JSON.parse(saved) as Record<string, boolean> : {};
+        const prefSaved = localStorage.getItem(`kif-notification-preferences-v1:${user?.phone || "guest"}`);
+        const prefs = prefSaved ? JSON.parse(prefSaved) as Record<string, boolean> : {};
+        const defaults = [
+          { id: "1", type: "transaction" }, { id: "2", type: "price" }, { id: "3", type: "system" },
+          { id: "4", type: "transaction" }, { id: "5", type: "security" }, { id: "6", type: "promo" },
+          { id: "7", type: "transaction" }, { id: "8", type: "system" },
+        ];
+        const count = defaults.filter(item => !(item.id in readMap ? readMap[item.id] : Number(item.id) > 3) && (prefs[item.type] ?? (item.type !== "promo"))).length;
+        setUnreadNotifCount(count);
+      } catch { setUnreadNotifCount(3); }
+    };
+    const initialUpdate = requestAnimationFrame(updateUnreadCount);
+    window.addEventListener("storage", updateUnreadCount);
+    window.addEventListener("kif-notifications-updated", updateUnreadCount);
+    return () => {
+      cancelAnimationFrame(initialUpdate);
+      window.removeEventListener("storage", updateUnreadCount);
+      window.removeEventListener("kif-notifications-updated", updateUnreadCount);
+    };
+  }, [pathname, user?.phone]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -233,7 +259,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="sidebar-bottom">
-          <div className="support-card"><span>؟</span><strong>نیاز به راهنمایی داری؟</strong><small>پشتیبانی کیف زرگر</small></div>
+          <Link href="/support" className="support-card" aria-label="ورود به مرکز پشتیبانی"><span>؟</span><strong>نیاز به راهنمایی داری؟</strong><small>پشتیبانی کیف زرگر · ثبت و پیگیری تیکت</small></Link>
           <div className="version">نسخه نمایشی ۰.۱</div>
         </div>
       </aside>
@@ -265,9 +291,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 aria-label="اعلان‌ها"
               >
                 <BellIcon />
-                {UNREAD_COUNT > 0 && (
+                {unreadNotifCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center shadow-md">
-                    {UNREAD_COUNT.toLocaleString("fa-IR")}
+                    {unreadNotifCount.toLocaleString("fa-IR")}
                   </span>
                 )}
               </button>
@@ -276,7 +302,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   <div className="p-3 border-b border-[var(--border)] flex items-center justify-between">
                     <div className="text-xs font-bold">اعلان‌ها</div>
                     <span className="text-[9px] bg-red-500/15 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full font-bold">
-                      {UNREAD_COUNT.toLocaleString("fa-IR")} جدید
+                      {unreadNotifCount.toLocaleString("fa-IR")} جدید
                     </span>
                   </div>
                   <div className="p-2 space-y-1.5">
@@ -320,6 +346,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
                   <Link href="/orders" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2">
                     <OrdersIcon /> سفارشات من
+                  </Link>
+
+                  <Link href="/profile" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">
+                    <span className="w-[14px] text-center">👤</span> پروفایل کاربری
+                  </Link>
+
+                  <Link href="/reports" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">
+                    <span className="w-[14px] text-center font-bold text-[var(--gold)]">▤</span> گزارش کامل فعالیت‌ها
+                  </Link>
+
+                  <Link href="/support" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">
+                    <span className="w-[14px] text-center font-bold text-[var(--gold)]">؟</span> مرکز پشتیبانی
                   </Link>
 
                   <Link href="/referral" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">

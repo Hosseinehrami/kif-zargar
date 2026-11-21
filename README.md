@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# کیف زرگر
 
-## Getting Started
+رابط کاربری پلتفرم مدیریت دارایی، خریدوفروش و معاملات طلا بر پایه Next.js.
 
-First, run the development server:
+## اجرا
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+برای بررسی تولید:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## مسیرهای مهم
 
-## Learn More
+- `/profile` — پروفایل کاربر و اطلاعات تکمیلی
+- `/profile/banks` — مدیریت کارت‌ها و حساب‌های بانکی
+- `/notifications` — مرکز اعلان‌ها و تنظیمات دریافت
+- `/reports` — گزارش کامل فعالیت‌ها و صورت‌حساب مالی
+- `/wallet` — کیف پول و حساب‌های بانکی
+- `/wallet/withdraw` — برداشت وجه با انتخاب حساب پیش‌فرض یا حساب دلخواه
 
-To learn more about Next.js, take a look at the following resources:
+## تکمیل رابط کاربری
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### پروفایل
+- صفحه مستقل پروفایل به منوی پروفایل اضافه شده است.
+- نام، شماره موبایل و کد ملی نمایش داده می‌شوند؛ داده‌های هویتی تأییدشده فقط‌خواندنی هستند.
+- ایمیل، تاریخ تولد و نشانی اختیاری قابل ویرایش‌اند و در داده محلی حساب ذخیره می‌شوند.
+- میانبر سفارشات، گزارش‌ها، اعلان‌ها و نشست‌های فعال در صفحه قرار دارد.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### حساب‌های بانکی
+- مسیر `/profile/banks` برای مدیریت حساب‌ها اضافه شده است.
+- افزودن و حذف حساب، انتخاب حساب پیش‌فرض و کپی شماره شبا در دسترس است.
+- کیف پول و فرم برداشت از یک منبع مشترک استفاده می‌کنند؛ انتخاب حساب پیش‌فرض در برداشت رعایت می‌شود.
+- اطلاعات کارت‌ها در مرورگر و به تفکیک حساب کاربری نگهداری می‌شود؛ شماره کامل کارت ذخیره نمی‌شود.
+- اعتبارسنجی شماره شبا با رقم کنترلی MOD-97 و کارت با الگوریتم Luhn انجام می‌شود.
 
-## Deploy on Vercel
+### اعلان‌ها
+- دسته‌های تراکنش، قیمت، اطلاعیه، امنیت و پیشنهادها قابل تنظیم‌اند.
+- کانال‌های ترجیحی داخل برنامه، ایمیل و پیامک قابل انتخاب‌اند.
+- هشدار قیمت با جهت بالاتر/پایین‌تر و قیمت هدف قابل ثبت است.
+- وضعیت خوانده‌شدن اعلان‌ها ذخیره می‌شود و شمارنده نوار بالایی به‌روز می‌شود.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### گزارش مالی
+- خلاصه واریز، برداشت، کارمزد و خالص گردش وجه بر اساس رکوردهای تکمیل‌شده و فیلترهای فعلی محاسبه می‌شود.
+- خروجی CSV شامل ردیف‌ها و جمع‌های خلاصه است.
+- چاپ و ذخیره PDF از پنجره چاپ مرورگر پشتیبانی می‌شود.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## محدودیت نسخه نمایشی
+
+این پروژه در این مرحله رابط کاربری آزمایشی است. پروفایل، تنظیمات اعلان و کارت‌های بانکی در localStorage مرورگر ذخیره می‌شوند. استعلام مالکیت حساب/شاهکار، ارسال واقعی پیامک و ایمیل، پایش خودکار قیمت، سوابق معاملات و گزارش‌های مالی به سرویس‌های سمت سرور متصل نیستند. رکوردها و مبالغ نمونه، سند مالی یا رسید واقعی محسوب نمی‌شوند.

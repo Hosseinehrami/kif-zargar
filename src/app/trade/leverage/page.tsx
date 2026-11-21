@@ -579,27 +579,53 @@ export default function LeverageTradingPage() {
         </div>
       </div>
 
+      
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* 📱 MOBILE VERSION */}
+      {/* 📱 MOBILE VERSION - SCROLLABLE LAYOUT */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <div className="lg:hidden flex flex-col h-[calc(100dvh-130px)] bg-[var(--bg)] text-[var(--text)] font-sans overflow-hidden" dir="rtl">
+      <div
+        className="lg:hidden flex flex-col h-[calc(100dvh-245px)] min-h-0 overflow-y-auto overflow-x-hidden bg-[var(--bg)] text-[var(--text)] font-sans relative z-[100]"
+        dir="rtl"
+      >
 
         {/* هدر موبایل */}
-        <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--border)] bg-[var(--panel)] shrink-0 h-11 z-20">
+        <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--border)] bg-[var(--panel)] shrink-0 h-11 relative z-20">
           <div className="flex items-center gap-1.5">
             <div className="relative">
               <button
                 onClick={() => setShowMarginDropdown(!showMarginDropdown)}
                 className="flex items-center justify-between gap-1 border border-[var(--border)] rounded-lg px-2 h-8 bg-[var(--panel-2)] hover:bg-[var(--panel)] transition text-[10px] font-bold text-[var(--text)] w-[110px]"
               >
-                <span className="truncate">{marginMode === "cross" ? "کل موجودی" : "مبلغ معامله"}</span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" className="shrink-0"><polyline points="6 9 12 15 18 9" /></svg>
+                <span className="truncate">
+                  {marginMode === "cross" ? "کل موجودی" : "مبلغ معامله"}
+                </span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" className="shrink-0">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </button>
 
               {showMarginDropdown && (
-                <div className="absolute top-full mt-1 right-0 w-full bg-[var(--panel)] border border-[var(--border)] rounded-lg shadow-xl z-50 overflow-hidden">
-                  <button onClick={() => handleSetMarginMode("cross")} className={`w-full text-right px-3 py-2 text-[10px] border-b border-[var(--border)] ${marginMode === "cross" ? "text-[var(--gold)] font-bold bg-[var(--panel-2)]" : "text-[var(--text)]"}`}>کل موجودی</button>
-                  <button onClick={() => handleSetMarginMode("isolated")} className={`w-full text-right px-3 py-2 text-[10px] ${marginMode === "isolated" ? "text-[var(--gold)] font-bold bg-[var(--panel-2)]" : "text-[var(--text)]"}`}>مبلغ معامله</button>
+                <div className="absolute top-full mt-1 right-0 w-full bg-[var(--panel)] border border-[var(--border)] rounded-lg shadow-xl z-[60] overflow-hidden">
+                  <button
+                    onClick={() => handleSetMarginMode("cross")}
+                    className={`w-full text-right px-3 py-2 text-[10px] border-b border-[var(--border)] ${
+                      marginMode === "cross"
+                        ? "text-[var(--gold)] font-bold bg-[var(--panel-2)]"
+                        : "text-[var(--text)]"
+                    }`}
+                  >
+                    کل موجودی
+                  </button>
+                  <button
+                    onClick={() => handleSetMarginMode("isolated")}
+                    className={`w-full text-right px-3 py-2 text-[10px] ${
+                      marginMode === "isolated"
+                        ? "text-[var(--gold)] font-bold bg-[var(--panel-2)]"
+                        : "text-[var(--text)]"
+                    }`}
+                  >
+                    مبلغ معامله
+                  </button>
                 </div>
               )}
             </div>
@@ -609,145 +635,339 @@ export default function LeverageTradingPage() {
               className="flex items-center justify-between gap-1 border border-[var(--border)] rounded-lg px-1.5 h-8 bg-[var(--panel-2)] hover:bg-[var(--panel)] transition text-[10px] font-bold text-[var(--text)] w-[60px]"
             >
               <span>{toFa(String(leverage))}x</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" className="shrink-0"><polyline points="6 9 12 15 18 9" /></svg>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" className="shrink-0">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
           </div>
 
           <div className="flex flex-col items-start justify-center">
-            <span className="text-[9px] text-[var(--muted)] font-bold leading-none mb-1">مثقال طلا</span>
+            <span className="text-[9px] text-[var(--muted)] font-bold leading-none mb-1">
+              مثقال طلا
+            </span>
             <div className="flex items-center gap-1 leading-none">
-              <span className="text-[11px] font-black text-[var(--green)] font-mono">{format(mesghalPrice)}</span>
-              <span className="text-[8px] font-bold text-[var(--green)] bg-[var(--green)]/10 px-1 py-0.5 rounded">+۰.۳٪</span>
+              <span className="text-[11px] font-black text-[var(--green)] font-mono">
+                {format(mesghalPrice)}
+              </span>
+              <span className="text-[8px] font-bold text-[var(--green)] bg-[var(--green)]/10 px-1 py-0.5 rounded">
+                +۰.۳٪
+              </span>
             </div>
           </div>
         </div>
 
-        {/* بدنه موبایل */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* فرم */}
-          <div className="w-[55%] flex flex-col bg-[var(--bg)] p-1.5 overflow-y-auto border-l border-[var(--border)]">
+        {/* بدنه اصلی موبایل */}
+        <div className="flex flex-row items-start shrink-0">
+
+          {/* فرم سفارش */}
+          <div className="w-[55%] flex flex-col bg-[var(--bg)] p-1.5 border-l border-[var(--border)]">
+
             <div className="flex bg-[var(--panel-2)] rounded p-[2px] mb-2">
-              <button onClick={() => handleSetSide("long")} disabled={isSubmitting} className={`flex-1 py-1 text-[10.5px] font-bold rounded-sm transition disabled:opacity-50 ${side === "long" ? "bg-[var(--green)] text-white shadow" : "text-[var(--muted)]"}`}>خرید</button>
-              <button onClick={() => handleSetSide("short")} disabled={isSubmitting} className={`flex-1 py-1 text-[10.5px] font-bold rounded-sm transition disabled:opacity-50 ${side === "short" ? "bg-[var(--red)] text-white shadow" : "text-[var(--muted)]"}`}>فروش</button>
+              <button
+                onClick={() => handleSetSide("long")}
+                disabled={isSubmitting}
+                className={`flex-1 py-1 text-[10.5px] font-bold rounded-sm transition disabled:opacity-50 ${
+                  side === "long"
+                    ? "bg-[var(--green)] text-white shadow"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                خرید
+              </button>
+              <button
+                onClick={() => handleSetSide("short")}
+                disabled={isSubmitting}
+                className={`flex-1 py-1 text-[10.5px] font-bold rounded-sm transition disabled:opacity-50 ${
+                  side === "short"
+                    ? "bg-[var(--red)] text-white shadow"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                فروش
+              </button>
             </div>
 
+            {/* نوع سفارش */}
             <div className="mb-1.5 relative">
               <div className="bg-[var(--panel-2)] rounded flex items-center justify-between px-2 py-1.5">
-                <span className="text-[10.5px] text-[var(--text)]">{orderType === "limit" ? "محدود" : "بازار"}</span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                <span className="text-[10.5px] text-[var(--text)]">
+                  {orderType === "limit" ? "محدود" : "بازار"}
+                </span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </div>
-              <select value={orderType} onChange={(e) => setOrderType(e.target.value as OrderType)} disabled={isSubmitting} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+              <select
+                value={orderType}
+                onChange={(e) => setOrderType(e.target.value as OrderType)}
+                disabled={isSubmitting}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              >
                 <option value="limit">محدود</option>
                 <option value="market">بازار</option>
               </select>
             </div>
 
+            {/* قیمت سفارش محدود */}
             {orderType === "limit" && (
               <div className="mb-1.5">
                 <div className="bg-[var(--panel-2)] rounded flex items-center px-1 py-0.5 relative">
-                  <button aria-label="کاهش قیمت" onClick={() => setLimitPrice(String(Math.max(0, Number(limitPrice) - 10000)))} className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base">-</button>
-                  <input type="text" dir="ltr" value={formatWithCommas(limitPrice)} onChange={(e) => setLimitPrice(sanitizeNumeric(e.target.value, false))} className="w-full bg-transparent text-center text-[12px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)] placeholder:text-[10px]" placeholder="قیمت" />
+                  <button
+                    aria-label="کاهش قیمت"
+                    onClick={() => setLimitPrice(String(Math.max(0, Number(limitPrice) - 10000)))}
+                    className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={formatWithCommas(limitPrice)}
+                    onChange={(e) => setLimitPrice(sanitizeNumeric(e.target.value, false))}
+                    className="w-full bg-transparent text-center text-[12px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)] placeholder:text-[10px]"
+                    placeholder="قیمت"
+                  />
                   <span className="absolute left-7 text-[9px] text-[var(--muted)]">ت</span>
-                  <button aria-label="افزایش قیمت" onClick={() => setLimitPrice(String(Number(limitPrice) + 10000))} className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base">+</button>
+                  <button
+                    aria-label="افزایش قیمت"
+                    onClick={() => setLimitPrice(String(Number(limitPrice) + 10000))}
+                    className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             )}
 
+            {/* مقدار وجه تضمین */}
             <div className="mb-1.5">
               <div className="bg-[var(--panel-2)] rounded flex items-center px-1 py-0.5">
-                <button aria-label="کاهش مقدار" onClick={handleDecreaseQty} className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base">-</button>
-                <input type="text" dir="ltr" value={collateralGold} onChange={(e) => handleCollateralChange(e.target.value)} placeholder="مقدار" className="w-full bg-transparent text-center text-[12px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)] placeholder:text-[10px]" />
-                <button aria-label="افزایش مقدار" onClick={handleIncreaseQty} className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base">+</button>
+                <button
+                  aria-label="کاهش مقدار"
+                  onClick={handleDecreaseQty}
+                  className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base"
+                >
+                  -
+                </button>
+                <input
+                  type="text"
+                  dir="ltr"
+                  value={collateralGold}
+                  onChange={(e) => handleCollateralChange(e.target.value)}
+                  placeholder="مقدار"
+                  className="w-full bg-transparent text-center text-[12px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)] placeholder:text-[10px]"
+                />
+                <button
+                  aria-label="افزایش مقدار"
+                  onClick={handleIncreaseQty}
+                  className="w-7 h-7 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] text-base"
+                >
+                  +
+                </button>
               </div>
             </div>
 
-            <PercentButtons side={side} activePercent={activePercent} setMarginPercent={setMarginPercent} disabled={isSubmitting} />
+            <PercentButtons
+              side={side}
+              activePercent={activePercent}
+              setMarginPercent={setMarginPercent}
+              disabled={isSubmitting}
+            />
 
+            {/* حد سود و ضرر */}
             <label className="flex items-center gap-1.5 mb-1.5 mt-2 cursor-pointer">
-              <input type="checkbox" checked={mobileTpSl} onChange={(e) => setMobileTpSl(e.target.checked)} className="w-3 h-3 rounded border-[var(--border)] bg-[var(--panel-2)] accent-[var(--gold)]" />
-              <span className="text-[9.5px] text-[var(--text)]">حد سود / حد ضرر (TP/SL)</span>
+              <input
+                type="checkbox"
+                checked={mobileTpSl}
+                onChange={(e) => setMobileTpSl(e.target.checked)}
+                className="w-3 h-3 rounded border-[var(--border)] bg-[var(--panel-2)] accent-[var(--gold)]"
+              />
+              <span className="text-[9.5px] text-[var(--text)]">
+                حد سود / حد ضرر (TP/SL)
+              </span>
             </label>
 
             {mobileTpSl && (
               <div className="grid grid-cols-2 gap-1.5 mb-2 fade-in">
                 <div>
                   <div className="relative bg-[var(--panel-2)] rounded flex items-center px-1.5 py-1 border border-[var(--border)] focus-within:border-[var(--green)] transition">
-                    <input type="text" dir="ltr" value={formatWithCommas(tpPrice)} onChange={(e) => setTpPrice(sanitizeNumeric(e.target.value, false))} placeholder="TP" className="w-full bg-transparent text-center text-[9.5px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)]" />
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={formatWithCommas(tpPrice)}
+                      onChange={(e) => setTpPrice(sanitizeNumeric(e.target.value, false))}
+                      placeholder="TP"
+                      className="w-full bg-transparent text-center text-[9.5px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)]"
+                    />
                     <span className="absolute left-1.5 text-[8px] text-[var(--muted)]">ت</span>
                   </div>
                 </div>
                 <div>
                   <div className="relative bg-[var(--panel-2)] rounded flex items-center px-1.5 py-1 border border-[var(--border)] focus-within:border-[var(--red)] transition">
-                    <input type="text" dir="ltr" value={formatWithCommas(slPrice)} onChange={(e) => setSlPrice(sanitizeNumeric(e.target.value, false))} placeholder="SL" className="w-full bg-transparent text-center text-[9.5px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)]" />
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={formatWithCommas(slPrice)}
+                      onChange={(e) => setSlPrice(sanitizeNumeric(e.target.value, false))}
+                      placeholder="SL"
+                      className="w-full bg-transparent text-center text-[9.5px] text-[var(--text)] font-mono outline-none placeholder:text-[var(--muted)]"
+                    />
                     <span className="absolute left-1.5 text-[8px] text-[var(--muted)]">ت</span>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* موجودی */}
             <div className="flex flex-col gap-0.5 text-[8.5px] text-[var(--muted)] mb-1.5">
-              <div className="flex justify-between"><span>موجودی:</span><span className="text-[var(--text)] font-mono">{toFa(userTotalGold.toString())} گرم</span></div>
-              <div className="flex justify-between"><span>بهترین خرید:</span><span className="text-[var(--green)] font-mono">{format(marketPrice - 10000)}</span></div>
+              <div className="flex justify-between">
+                <span>موجودی:</span>
+                <span className="text-[var(--text)] font-mono">
+                  {toFa(userTotalGold.toString())} گرم
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>بهترین خرید:</span>
+                <span className="text-[var(--green)] font-mono">
+                  {format(marketPrice - 10000)}
+                </span>
+              </div>
             </div>
 
+            {/* خلاصه معامله */}
             <div className="mb-2">
-              <TradeSummary side={side} orderType={orderType} collateralNum={collateralNum} calc={calc} />
+              <TradeSummary
+                side={side}
+                orderType={orderType}
+                collateralNum={collateralNum}
+                calc={calc}
+              />
             </div>
 
+            {/* ثبت سفارش */}
             <button
               onClick={handleSubmit}
               disabled={!isValid || isSubmitting}
-              className={`w-full py-2 rounded text-[12px] font-bold text-white transition shadow-lg ${side === "long" ? "bg-[var(--green)] hover:bg-[var(--green)]/90" : "bg-[var(--red)] hover:bg-[var(--red)]/90"} disabled:opacity-50`}
+              className={`w-full py-2 rounded text-[12px] font-bold text-white transition shadow-lg ${
+                side === "long"
+                  ? "bg-[var(--green)] hover:bg-[var(--green)]/90"
+                  : "bg-[var(--red)] hover:bg-[var(--red)]/90"
+              } disabled:opacity-50`}
             >
-              {isSubmitting ? "..." : side === "long" ? `خرید / Long` : `فروش / Short`}
+              {isSubmitting ? "..." : side === "long" ? "خرید / Long" : "فروش / Short"}
             </button>
           </div>
 
           {/* دفتر سفارشات */}
-          <div className="w-[45%] flex flex-col bg-[var(--bg)]">
+          <div className="w-[45%] h-[360px] shrink-0 flex flex-col bg-[var(--bg)]">
+
             <div className="grid grid-cols-2 text-[8.5px] text-[var(--muted)] px-2 py-1 bg-[var(--panel)]">
               <span className="text-right">قیمت</span>
               <span className="text-left">مقدار</span>
             </div>
+
             <div className="flex-1 flex flex-col justify-end pb-1">
               {orderBook.asks.slice(0, 6).map((ask, i) => (
                 <div key={i} className="relative grid grid-cols-2 px-1.5 py-[1px] text-[9.5px]">
-                  <div className="absolute inset-y-0 right-0 bg-[var(--red)]/10" style={{ width: `${(ask.total / orderBook.maxTotal) * 100}%` }} />
-                  <span className="text-[var(--red)] text-right z-10 font-mono">{format(ask.price)}</span>
-                  <span className="text-[var(--text)] text-left z-10 font-mono" dir="ltr">{ask.amount.toFixed(3)}</span>
+                  <div
+                    className="absolute inset-y-0 right-0 bg-[var(--red)]/10"
+                    style={{ width: `${(ask.total / orderBook.maxTotal) * 100}%` }}
+                  />
+                  <span className="text-[var(--red)] text-right z-10 font-mono">
+                    {format(ask.price)}
+                  </span>
+                  <span className="text-[var(--text)] text-left z-10 font-mono" dir="ltr">
+                    {ask.amount.toFixed(3)}
+                  </span>
                 </div>
               ))}
             </div>
+
             <div className="px-2 py-1 border-y border-[var(--border)] bg-[var(--panel)]">
-              <div className="text-[13px] font-black text-[var(--green)] font-mono">{format(marketPrice)}</div>
-              <div className="text-[8px] text-[var(--muted)] font-mono" dir="ltr">≈ ${toFa("19200")}</div>
+              <div className="text-[13px] font-black text-[var(--green)] font-mono">
+                {format(marketPrice)}
+              </div>
+              <div className="text-[8px] text-[var(--muted)] font-mono" dir="ltr">
+                ≈ ${toFa("19200")}
+              </div>
             </div>
+
             <div className="flex-1 flex flex-col pt-1">
               {orderBook.bids.slice(0, 6).map((bid, i) => (
                 <div key={i} className="relative grid grid-cols-2 px-1.5 py-[1px] text-[9.5px]">
-                  <div className="absolute inset-y-0 right-0 bg-[var(--green)]/10" style={{ width: `${(bid.total / orderBook.maxTotal) * 100}%` }} />
-                  <span className="text-[var(--green)] text-right z-10 font-mono">{format(bid.price)}</span>
-                  <span className="text-[var(--text)] text-left z-10 font-mono" dir="ltr">{bid.amount.toFixed(3)}</span>
+                  <div
+                    className="absolute inset-y-0 right-0 bg-[var(--green)]/10"
+                    style={{ width: `${(bid.total / orderBook.maxTotal) * 100}%` }}
+                  />
+                  <span className="text-[var(--green)] text-right z-10 font-mono">
+                    {format(bid.price)}
+                  </span>
+                  <span className="text-[var(--text)] text-left z-10 font-mono" dir="ltr">
+                    {bid.amount.toFixed(3)}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* پایین: کارت پوزیشن‌ها */}
-        <div className="h-[260px] flex flex-col border-t border-[var(--border)] bg-[var(--panel)] shrink-0 z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-2 bg-[var(--panel-2)]">
-            <div className="flex gap-4">
-              <button onClick={() => setBottomTab("orders")} className={`py-2 text-[11px] font-bold transition ${bottomTab === "orders" ? "text-[var(--gold)] border-b-2 border-[var(--gold)]" : "text-[var(--muted)] border-b-2 border-transparent"}`}>سفارشات باز (۰)</button>
-              <button onClick={() => setBottomTab("positions")} className={`py-2 text-[11px] font-bold transition ${bottomTab === "positions" ? "text-[var(--gold)] border-b-2 border-[var(--gold)]" : "text-[var(--muted)] border-b-2 border-transparent"}`}>پوزیشن‌ها ({toFa(String(positions.length))})</button>
-              <button onClick={() => setBottomTab("history")} className={`py-2 text-[11px] font-bold transition ${bottomTab === "history" ? "text-[var(--gold)] border-b-2 border-[var(--gold)]" : "text-[var(--muted)] border-b-2 border-transparent"}`}>تاریخچه</button>
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* بخش پایین صفحه: سفارشات، پوزیشن‌ها و تاریخچه */}
+        {/* ═══════════════════════════════════════════════════════ */}
+
+        <div className="flex flex-col border-t border-[var(--border)] bg-[var(--panel)] shrink-0 mt-2">
+
+          {/* تب‌ها */}
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-2 bg-[var(--panel-2)] sticky top-0 z-10">
+            <div className="flex gap-3">
+              <button
+                onClick={() => setBottomTab("orders")}
+                className={`py-2 text-[10px] font-bold whitespace-nowrap transition ${
+                  bottomTab === "orders"
+                    ? "text-[var(--gold)] border-b-2 border-[var(--gold)]"
+                    : "text-[var(--muted)] border-b-2 border-transparent"
+                }`}
+              >
+                سفارشات باز (۰)
+              </button>
+
+              <button
+                onClick={() => setBottomTab("positions")}
+                className={`py-2 text-[10px] font-bold whitespace-nowrap transition ${
+                  bottomTab === "positions"
+                    ? "text-[var(--gold)] border-b-2 border-[var(--gold)]"
+                    : "text-[var(--muted)] border-b-2 border-transparent"
+                }`}
+              >
+                پوزیشن‌ها ({toFa(String(positions.length))})
+              </button>
+
+              <button
+                onClick={() => setBottomTab("history")}
+                className={`py-2 text-[10px] font-bold whitespace-nowrap transition ${
+                  bottomTab === "history"
+                    ? "text-[var(--gold)] border-b-2 border-[var(--gold)]"
+                    : "text-[var(--muted)] border-b-2 border-transparent"
+                }`}
+              >
+                تاریخچه
+              </button>
             </div>
+
             {positions.length > 0 && bottomTab === "positions" && (
-              <button onClick={() => setShowCloseAllConfirm(true)} className="text-[9px] text-[var(--red)] bg-[var(--red)]/10 px-2 py-1 rounded">بستن همه</button>
+              <button
+                onClick={() => setShowCloseAllConfirm(true)}
+                className="text-[9px] text-[var(--red)] bg-[var(--red)]/10 px-2 py-1 rounded whitespace-nowrap"
+              >
+                بستن همه
+              </button>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          {/* محتوای تب‌ها */}
+          <div className="p-2">
+
+            {/* سفارشات باز */}
             {bottomTab === "orders" && (
               <div className="text-center py-8 text-[11px] text-[var(--muted)]">
                 <div className="text-3xl mb-2 opacity-50">📭</div>
@@ -755,6 +975,7 @@ export default function LeverageTradingPage() {
               </div>
             )}
 
+            {/* پوزیشن‌های باز */}
             {bottomTab === "positions" && (
               <>
                 {positions.length === 0 ? (
@@ -763,80 +984,165 @@ export default function LeverageTradingPage() {
                     پوزیشن بازی ندارید.
                   </div>
                 ) : (
-                  positions.map((p) => {
-                    const pnl = computePnl(p);
-                    return (
-                      <div key={p.id} className="bg-[var(--bg)] border border-[var(--border)] rounded-xl p-3 shadow-sm">
-                        <div className="flex justify-between items-center mb-3 border-b border-[var(--border)] pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-[var(--text)]">{p.pair}</span>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${p.side === "long" ? "bg-[var(--green)]/10 text-[var(--green)]" : "bg-[var(--red)]/10 text-[var(--red)]"}`}>
-                              {p.side === "long" ? "خرید" : "فروش"} {toFa(String(p.leverage))}x
-                            </span>
-                          </div>
-                          <button onClick={() => setClosingPosition(p)} className="text-[10px] text-[var(--gold)] font-bold bg-[var(--gold)]/10 px-2 py-1 rounded-md hover:bg-[var(--gold)]/20 transition">بستن پوزیشن</button>
-                        </div>
+                  <div className="flex flex-col">
+                    {positions.map((p) => {
+                      const pnl = computePnl(p);
 
-                        <div className="grid grid-cols-3 gap-y-3 gap-x-2 text-center">
-                          <div className="flex flex-col">
-                            <span className="text-[8.5px] text-[var(--muted)] mb-0.5">قیمت ورود</span>
-                            <span className="text-[10px] font-mono text-[var(--text)]">{format(p.entry)}</span>
-                          </div>
-                          <div className="flex flex-col border-x border-[var(--border)]">
-                            <span className="text-[8.5px] text-[var(--muted)] mb-0.5">قیمت لحظه‌ای</span>
-                            <span className="text-[10px] font-mono text-[var(--green)]">{format(p.markPrice)}</span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[8.5px] text-[var(--muted)] mb-0.5">قیمت لیکویید</span>
-                            <span className="text-[10px] font-mono text-[var(--red)]">{format(p.liqPrice)}</span>
-                          </div>
+                      return (
+                        <div
+                          key={p.id}
+                          className="py-3 border-b border-[var(--border)] last:border-b-0"
+                        >
 
-                          <div className="flex flex-col pt-2 border-t border-[var(--border)]">
-                            <span className="text-[8.5px] text-[var(--muted)] mb-0.5">حجم</span>
-                            <span className="text-[10px] font-mono text-[var(--gold)]">{toFa(p.size.toFixed(3))} گرم</span>
-                          </div>
-                          <div className="flex flex-col pt-2 border-t border-[var(--border)] border-x">
-                            <span className="text-[8.5px] text-[var(--muted)] mb-0.5">مارجین</span>
-                            <span className="text-[10px] font-mono text-[var(--gold)]">{toFa(p.marginGold.toFixed(3))} گرم</span>
-                          </div>
-                          <div className="flex flex-col pt-2 border-t border-[var(--border)]">
-                            <span className="text-[8.5px] text-[var(--muted)] mb-0.5">ارزش کل</span>
-                            <span className="text-[10px] font-mono text-[var(--gold)]">{toFa(p.valueGold.toFixed(3))} گرم</span>
+                          {/* عنوان پوزیشن */}
+                          <div className="flex justify-between items-center mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-[var(--text)]">
+                                {p.pair}
+                              </span>
+
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                                p.side === "long"
+                                  ? "bg-[var(--green)]/10 text-[var(--green)]"
+                                  : "bg-[var(--red)]/10 text-[var(--red)]"
+                              }`}>
+                                {p.side === "long" ? "خرید" : "فروش"} {toFa(String(p.leverage))}x
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={() => setClosingPosition(p)}
+                              className="text-[10px] text-[var(--gold)] font-bold bg-[var(--gold)]/10 px-2 py-1 rounded-md hover:bg-[var(--gold)]/20 transition"
+                            >
+                              بستن پوزیشن
+                            </button>
                           </div>
 
-                          <div className="col-span-3 bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2 mt-1">
-                            <div className="flex justify-between items-center mb-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${p.fundingType === "اجاره" ? "bg-[var(--green)]/15 text-[var(--green)]" : "bg-[var(--red)]/15 text-[var(--red)]"}`}>{p.fundingType}</span>
-                                <span className="text-[8px] text-[var(--muted)]">(تعیین مدیریت)</span>
+                          {/* اطلاعات اصلی */}
+                          <div className="grid grid-cols-3 gap-y-3 gap-x-2 text-center">
+
+                            <div className="flex flex-col">
+                              <span className="text-[8.5px] text-[var(--muted)] mb-0.5">
+                                قیمت ورود
+                              </span>
+                              <span className="text-[10px] font-mono text-[var(--text)]">
+                                {format(p.entry)}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col border-x border-[var(--border)]">
+                              <span className="text-[8.5px] text-[var(--muted)] mb-0.5">
+                                قیمت لحظه‌ای
+                              </span>
+                              <span className="text-[10px] font-mono text-[var(--green)]">
+                                {format(p.markPrice)}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col">
+                              <span className="text-[8.5px] text-[var(--muted)] mb-0.5">
+                                قیمت لیکویید
+                              </span>
+                              <span className="text-[10px] font-mono text-[var(--red)]">
+                                {format(p.liqPrice)}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col pt-2 border-t border-[var(--border)]">
+                              <span className="text-[8.5px] text-[var(--muted)] mb-0.5">
+                                حجم معامله
+                              </span>
+                              <span className="text-[10px] font-mono text-[var(--gold)]">
+                                {toFa(p.size.toFixed(3))} گرم
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col pt-2 border-t border-x border-[var(--border)]">
+                              <span className="text-[8.5px] text-[var(--muted)] mb-0.5">
+                                مارجین
+                              </span>
+                              <span className="text-[10px] font-mono text-[var(--gold)]">
+                                {toFa(p.marginGold.toFixed(3))} گرم
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col pt-2 border-t border-[var(--border)]">
+                              <span className="text-[8.5px] text-[var(--muted)] mb-0.5">
+                                ارزش کل
+                              </span>
+                              <span className="text-[10px] font-mono text-[var(--gold)]">
+                                {toFa(p.valueGold.toFixed(3))} گرم
+                              </span>
+                            </div>
+
+                            {/* اجاره و بلوکه */}
+                            <div className="col-span-3 bg-[var(--panel-2)] border border-[var(--border)] rounded-lg p-2 mt-1">
+                              <div className="flex justify-between items-center mb-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                                    p.fundingType === "اجاره"
+                                      ? "bg-[var(--green)]/15 text-[var(--green)]"
+                                      : "bg-[var(--red)]/15 text-[var(--red)]"
+                                  }`}>
+                                    {p.fundingType}
+                                  </span>
+                                  <span className="text-[8px] text-[var(--muted)]">
+                                    (تعیین مدیریت)
+                                  </span>
+                                </div>
+
+                                <span className="text-[10px] font-mono text-[var(--gold)]">
+                                  {toFa(p.fundingAmountGold.toFixed(4))} گرم
+                                </span>
                               </div>
-                              <span className="text-[10px] font-mono text-[var(--gold)]">{toFa(p.fundingAmountGold.toFixed(4))} گرم</span>
-                            </div>
-                            <div className="flex justify-between items-center text-[8.5px] text-[var(--muted)] pt-1 border-t border-[var(--border)]">
-                              <span>نرخ: {toFa(p.fundingRate.toFixed(2))}% (۲۴ ساعت)</span>
-                              <span className="text-amber-400">⏳ {p.fundingStatus}</span>
-                            </div>
-                          </div>
-                        </div>
 
-                        <div className="flex justify-between items-center mt-3 pt-2 border-t border-[var(--border)] bg-[var(--panel-2)] p-1.5 rounded-lg">
-                          <span className="text-[9px] text-[var(--muted)]">سود/زیان شناور (گرم)</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-bold font-mono text-[var(--gold)]">
-                              {pnl.pnlGold >= 0 ? "+" : ""}{toFa(pnl.pnlGold.toFixed(3))}
-                            </span>
-                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[var(--gold)]/15 text-[var(--gold)]">
-                              {pnl.roe >= 0 ? "+" : ""}{toFa(pnl.roe.toFixed(2))}٪
-                            </span>
+                              <div className="flex justify-between items-center text-[8.5px] text-[var(--muted)] pt-1 border-t border-[var(--border)]">
+                                <span>
+                                  نرخ: {toFa(p.fundingRate.toFixed(2))}% (۲۴ ساعت)
+                                </span>
+                                <span className="text-amber-400">
+                                  ⏳ {p.fundingStatus}
+                                </span>
+                              </div>
+                            </div>
                           </div>
+
+                          {/* سود و زیان */}
+                          <div className="flex justify-between items-center mt-3 pt-2 border-t border-[var(--border)]">
+                            <span className="text-[9px] text-[var(--muted)]">
+                              سود/زیان شناور (گرم)
+                            </span>
+
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[11px] font-bold font-mono ${
+                                pnl.pnlGold >= 0
+                                  ? "text-[var(--green)]"
+                                  : "text-[var(--red)]"
+                              }`}>
+                                {pnl.pnlGold >= 0 ? "+" : ""}
+                                {toFa(pnl.pnlGold.toFixed(3))}
+                              </span>
+
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                                pnl.roe >= 0
+                                  ? "bg-[var(--green)]/15 text-[var(--green)]"
+                                  : "bg-[var(--red)]/15 text-[var(--red)]"
+                              }`}>
+                                {pnl.roe >= 0 ? "+" : ""}
+                                {toFa(pnl.roe.toFixed(2))}٪
+                              </span>
+                            </div>
+                          </div>
+
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
               </>
             )}
 
+            {/* تاریخچه */}
             {bottomTab === "history" && (
               <div className="text-center py-8 text-[11px] text-[var(--muted)]">
                 <div className="text-3xl mb-2 opacity-50">🕒</div>
@@ -848,54 +1154,140 @@ export default function LeverageTradingPage() {
 
         {/* پاپ‌آپ توضیحات مارجین */}
         {showMarginExplanation && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setShowMarginExplanation(false)}>
-            <div className="bg-[var(--panel)] border border-[var(--border)] rounded-2xl p-5 shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            onClick={() => setShowMarginExplanation(false)}
+          >
+            <div
+              className="bg-[var(--panel)] border border-[var(--border)] rounded-2xl p-5 shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="w-12 h-12 rounded-full bg-[var(--gold)]/10 text-[var(--gold)] flex items-center justify-center mx-auto mb-3">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
               </div>
-              <h3 className="font-bold text-sm mb-2">{marginMode === "cross" ? "حالت کل موجودی (Cross)" : "حالت مبلغ معامله (Isolated)"}</h3>
+
+              <h3 className="font-bold text-sm mb-2">
+                {marginMode === "cross" ? "حالت کل موجودی (Cross)" : "حالت مبلغ معامله (Isolated)"}
+              </h3>
+
               <p className="text-[11px] text-[var(--muted)] leading-relaxed">
                 {marginMode === "cross"
                   ? "در این حالت تمام طلای شما به عنوان وجه تضمین پشتیبان پوزیشن است. اگر ضرر کنید، از کل موجودی شما کسر می‌شود (ریسک کمتر)."
                   : "در این حالت فقط مقدار وارد شده در کادر وجه تضمین در خطر است. اگر ضرر کنید، فقط همان مقدار از بین می‌رود (ریسک بیشتر)."}
               </p>
-              <div className="mt-4 text-[10px] text-[var(--muted)] bg-[var(--panel-2)] py-2 rounded-lg border border-[var(--border)]">برای بستن، هر جای صفحه کلیک کنید</div>
+
+              <div className="mt-4 text-[10px] text-[var(--muted)] bg-[var(--panel-2)] py-2 rounded-lg border border-[var(--border)]">
+                برای بستن، هر جای صفحه کلیک کنید
+              </div>
             </div>
           </div>
         )}
 
-        {/* مودال اهرم */}
-        {showLeverageModal && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowLeverageModal(false)}>
-            <div className="w-full max-w-md bg-[var(--panel)] rounded-t-2xl p-5 border-t border-[var(--border)] shadow-2xl animate-in slide-in-from-bottom duration-200" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-sm font-bold text-[var(--text)]">تنظیم اهرم (Leverage)</h3>
-                <button onClick={() => setShowLeverageModal(false)} className="text-[var(--muted)] hover:text-[var(--text)]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
+        {/* مودال تنظیم اهرم - نسخه موبایل */}
+{showLeverageModal && (
+  <div
+    className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+    onClick={() => setShowLeverageModal(false)}
+    onPointerDown={(e) => e.stopPropagation()}
+  >
+    <div
+      className="relative w-full max-w-md bg-[var(--panel)] rounded-t-2xl px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-[var(--border)] shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      {/* عنوان */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-bold text-[var(--text)]">
+          تنظیم اهرم (Leverage)
+        </h3>
 
-              <div className="text-center mb-6">
-                <span className="text-3xl font-black text-[var(--gold)] font-mono">{toFa(String(leverage))}x</span>
-              </div>
+        <button
+          type="button"
+          onClick={() => setShowLeverageModal(false)}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--panel-2)]"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
 
-              <div className="mb-8">
-                <input type="range" min="1" max="20" step="1" value={leverage} onChange={(e) => setLeverage(Number(e.target.value))} className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[var(--gold)] bg-[var(--border)]" dir="ltr" />
-                <div className="flex justify-between text-[10px] text-[var(--muted)] mt-2 font-mono" dir="ltr">
-                  <span>1x</span><span>5x</span><span>10x</span><span>15x</span><span>20x</span>
-                </div>
-              </div>
+      {/* مقدار اهرم */}
+      <div className="text-center mb-4">
+        <span className="text-2xl font-black text-[var(--gold)] font-mono">
+          {toFa(String(leverage))}x
+        </span>
+      </div>
 
-              <div className="grid grid-cols-4 gap-2 mb-6">
-                {[1, 5, 10, 20].map(val => (
-                  <button key={val} onClick={() => setLeverage(val)} className={`py-2 rounded-lg border text-xs font-bold transition ${leverage === val ? "bg-[var(--gold)] text-black border-[var(--gold)]" : "bg-[var(--panel-2)] border-[var(--border)] text-[var(--text)] hover:border-[var(--gold)]/50"}`}>{val}x</button>
-                ))}
-              </div>
+      {/* اسلایدر */}
+      <div className="mb-5 px-1">
+        <input
+          type="range"
+          min="1"
+          max="20"
+          step="1"
+          value={leverage}
+          onChange={(e) => setLeverage(Number(e.target.value))}
+          className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-[var(--gold)] bg-[var(--border)]"
+          dir="ltr"
+        />
 
-              <button onClick={() => setShowLeverageModal(false)} className="w-full py-3 rounded-xl bg-[var(--gold)] text-black font-bold text-sm hover:bg-[var(--gold)]/90 transition shadow-lg shadow-[var(--gold)]/20">تایید</button>
-            </div>
-          </div>
-        )}
+        <div
+          className="flex justify-between text-[10px] text-[var(--muted)] mt-2 font-mono"
+          dir="ltr"
+        >
+          <span>1x</span>
+          <span>5x</span>
+          <span>10x</span>
+          <span>15x</span>
+          <span>20x</span>
+        </div>
+      </div>
+
+      {/* انتخاب سریع اهرم */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[1, 5, 10, 20].map((val) => (
+          <button
+            type="button"
+            key={val}
+            onClick={() => setLeverage(val)}
+            className={`h-9 rounded-lg border text-xs font-bold transition ${
+              leverage === val
+                ? "bg-[var(--gold)] text-black border-[var(--gold)]"
+                : "bg-[var(--panel-2)] border-[var(--border)] text-[var(--text)]"
+            }`}
+          >
+            {val}x
+          </button>
+        ))}
+      </div>
+
+      {/* تایید */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowLeverageModal(false);
+        }}
+        className="w-full h-10 rounded-lg bg-[var(--gold)] text-black font-bold text-sm active:scale-[0.99] transition"
+      >
+        تایید
+      </button>
+    </div>
+  </div>
+)}
 
         {/* دیالوگ تایید بستن یک پوزیشن */}
         <ConfirmDialog

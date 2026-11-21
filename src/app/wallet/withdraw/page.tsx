@@ -4,17 +4,13 @@ import { useState, useEffect, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { format, toFa, toEnDigits } from "@/lib/format";
+import { useBankCards } from "@/lib/bank-cards";
 
 const MIN_WITHDRAW = 200_000;
 const INSTANT_FEE_RATE = 0.01;
 const INSTANT_START_HOUR = 3;
 const INSTANT_END_HOUR = 12.5;
 const AVAILABLE_BALANCE = 171_274_000;
-
-const USER_CARDS = [
-  { id: "card1", bank: "بانک ملی ایران", last4: "4589", isDefault: true },
-  { id: "card2", bank: "بانک سامان", last4: "7823", isDefault: false },
-];
 
 type Tab = "instant" | "normal";
 type Step = "form" | "pin" | "success";
@@ -49,11 +45,12 @@ function checkInstantWindow(): WindowStatus {
 export default function WithdrawPage() {
   const router = useRouter();
   const { user, hasPin } = useAuth();
+  const { cards: USER_CARDS, ready: cardsReady } = useBankCards();
 
   const [tab, setTab] = useState<Tab>("normal");
   const [step, setStep] = useState<Step>("form");
   const [amount, setAmount] = useState("");
-  const [selectedCard, setSelectedCard] = useState(USER_CARDS[0].id);
+  const [selectedCard, setSelectedCard] = useState("");
   const [showCardPicker, setShowCardPicker] = useState(false);
   const [instantWindow, setInstantWindow] = useState<WindowStatus>({ allowed: true });
   const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
@@ -100,12 +97,18 @@ export default function WithdrawPage() {
   const fee = tab === "instant" ? amountNum * INSTANT_FEE_RATE : 0;
   const finalAmount = amountNum - fee;
   const enoughBalance = amountNum <= AVAILABLE_BALANCE;
+  const selectedCardObj = USER_CARDS.find(c => c.id === selectedCard);
   const isValid =
     amountNum >= MIN_WITHDRAW &&
     enoughBalance &&
-    (tab === "normal" || instantWindow.allowed);
+    !!selectedCardObj && (tab === "normal" || instantWindow.allowed);
 
-  const selectedCardObj = USER_CARDS.find(c => c.id === selectedCard);
+  useEffect(() => {
+    if (!cardsReady) return;
+    if (!selectedCard || !USER_CARDS.some(card => card.id === selectedCard)) {
+      setSelectedCard(USER_CARDS.find(card => card.isDefault)?.id || USER_CARDS[0]?.id || "");
+    }
+  }, [cardsReady, USER_CARDS, selectedCard]);
 
   function proceedToPin() {
     if (!isValid) return;
@@ -306,8 +309,8 @@ export default function WithdrawPage() {
                   🏦
                 </div>
                 <div className="flex-1 text-right min-w-0">
-                  <div className="text-[11px] font-bold">{selectedCardObj?.bank}</div>
-                  <div className="text-[10px] text-[var(--muted)] font-mono mt-0.5" dir="ltr">•••• {selectedCardObj?.last4}</div>
+                  <div className="text-[11px] font-bold">{selectedCardObj?.bank || "حساب بانکی انتخاب نشده"}</div>
+                  <div className="text-[10px] text-[var(--muted)] font-mono mt-0.5" dir="ltr">{selectedCardObj ? `•••• ${selectedCardObj.last4}` : "برای انتخاب یا افزودن حساب کلیک کنید"}</div>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6" />
@@ -470,7 +473,12 @@ export default function WithdrawPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {USER_CARDS.map(card => (
+              {USER_CARDS.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[var(--border)] p-4 text-center">
+                  <div className="text-xs font-bold">حساب بانکی ثبت نشده است</div>
+                  <button type="button" onClick={() => router.push("/profile/banks")} className="mt-2 text-[10px] font-bold text-[var(--gold)]">افزودن حساب بانکی</button>
+                </div>
+              ) : USER_CARDS.map(card => (
                 <button
                   key={card.id}
                   type="button"

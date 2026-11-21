@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { format, toFa } from "@/lib/format";
+import { format, toFa, toEnDigits } from "@/lib/format";
+import { useAuth } from "@/lib/auth-context";
 
 // ==========================================
 // انواع
@@ -68,11 +69,69 @@ function matchesFilter(n: Notification, f: FilterId): boolean {
 // ==========================================
 export default function NotificationsPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const storageSuffix = user?.phone || "guest";
   const [items, setItems] = useState<Notification[]>(MOCK_NOTIFICATIONS);
   const [filter, setFilter] = useState<FilterId>("all");
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [preferences, setPreferences] = useState({ transaction: true, price: true, system: true, security: true, promo: false, inApp: true, email: false, sms: false });
+  const [priceAlert, setPriceAlert] = useState({ enabled: false, direction: "above" as "above" | "below", target: "" });
+  const [loadedStorageKey, setLoadedStorageKey] = useState<string | null>(null);
 
-  const unreadCount = useMemo(() => items.filter((i) => !i.read).length, [items]);
-  const filtered = useMemo(() => items.filter((n) => matchesFilter(n, filter)), [items, filter]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset account-scoped notification state before loading the next account
+    setLoadedStorageKey(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset account-scoped notification state before loading the next account
+    setItems(MOCK_NOTIFICATIONS);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset account-scoped notification state before loading the next account
+    setPreferences({ transaction: true, price: true, system: true, security: true, promo: false, inApp: true, email: false, sms: false });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset account-scoped notification state before loading the next account
+    setPriceAlert({ enabled: false, direction: "above", target: "" });
+    try {
+      const savedItems = localStorage.getItem(`kif-notifications-v1:${storageSuffix}`);
+      if (savedItems) {
+        const readMap = JSON.parse(savedItems) as Record<string, boolean>;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted read states on mount
+        setItems(MOCK_NOTIFICATIONS.map(item => ({ ...item, read: readMap[item.id] ?? item.read })));
+      }
+      const savedPreferences = localStorage.getItem(`kif-notification-preferences-v1:${storageSuffix}`);
+      if (savedPreferences) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore saved notification preferences on mount
+        setPreferences(prev => ({ ...prev, ...JSON.parse(savedPreferences) }));
+      }
+      const savedPriceAlert = localStorage.getItem(`kif-price-alert-v1:${storageSuffix}`);
+      if (savedPriceAlert) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore saved price alert on mount
+        setPriceAlert(prev => ({ ...prev, ...JSON.parse(savedPriceAlert) }));
+      }
+    } catch { /* keep defaults when local storage is unavailable */ }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- finish local notification storage hydration
+    setLoadedStorageKey(storageSuffix);
+  }, [storageSuffix]);
+
+  useEffect(() => {
+    if (loadedStorageKey !== storageSuffix) return;
+    try { localStorage.setItem(`kif-notifications-v1:${storageSuffix}`, JSON.stringify(Object.fromEntries(items.map(item => [item.id, item.read])))); } catch {}
+    window.dispatchEvent(new Event("kif-notifications-updated"));
+  }, [items, storageSuffix, loadedStorageKey]);
+
+  function togglePreference(key: keyof typeof preferences) {
+    const next = { ...preferences, [key]: !preferences[key] };
+    setPreferences(next);
+    try { localStorage.setItem(`kif-notification-preferences-v1:${storageSuffix}`, JSON.stringify(next)); } catch {}
+    window.dispatchEvent(new Event("kif-notifications-updated"));
+  }
+
+  function savePriceAlert(next: typeof priceAlert) {
+    const target = toEnDigits(next.target).replace(/\D/g, "");
+    if (next.enabled && (!target || Number(target) <= 0)) return;
+    const normalized = { ...next, target };
+    setPriceAlert(normalized);
+    try { localStorage.setItem(`kif-price-alert-v1:${storageSuffix}`, JSON.stringify(normalized)); } catch {}
+  }
+
+  const unreadCount = useMemo(() => items.filter((i) => !i.read && preferences[i.type]).length, [items, preferences]);
+  const filtered = useMemo(() => items.filter((n) => preferences[n.type] && matchesFilter(n, filter)), [items, filter, preferences]);
 
   function markRead(id: string) {
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
@@ -111,6 +170,7 @@ export default function NotificationsPage() {
           </h1>
           <p className="text-[10px] text-[var(--muted)] mt-0.5">تراکنش‌ها، هشدارها و اطلاعیه‌ها</p>
         </div>
+        <button onClick={() => setShowPreferences(v => !v)} aria-expanded={showPreferences} className="h-8 w-8 rounded-lg border border-[var(--border)] bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--gold)]" title="تنظیمات اعلان‌ها" aria-label="تنظیمات اعلان‌ها">⚙</button>
         {unreadCount > 0 && (
           <button
             onClick={markAllRead}
@@ -124,6 +184,15 @@ export default function NotificationsPage() {
         )}
       </div>
 
+      {showPreferences && <section className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 mb-3 space-y-3">
+        <div><h2 className="text-xs font-black">تنظیمات دریافت اعلان</h2><p className="text-[9px] text-[var(--muted)] mt-1">نوع اعلان‌ها و کانال‌های دلخواه را مشخص کنید. تنظیمات در همین مرورگر ذخیره می‌شوند.</p></div>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {([ ["transaction", "تراکنش‌ها", "واریز، برداشت، خرید و فروش"], ["price", "هشدار قیمت", "رسیدن قیمت به محدوده انتخابی"], ["system", "اطلاعیه‌های سامانه", "به‌روزرسانی و پیام‌های عمومی"], ["security", "هشدارهای امنیتی", "ورود جدید و تغییرات امنیتی"], ["promo", "پیشنهادها و تخفیف‌ها", "کمپین‌ها و طرح‌های تشویقی"] ] as const).map(([key, title, desc]) => <label key={key} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-3 cursor-pointer"><input type="checkbox" checked={preferences[key]} onChange={() => togglePreference(key)} className="accent-[var(--gold)] w-4 h-4"/><span className="flex-1"><b className="block text-[10px]">{title}</b><small className="block text-[8px] text-[var(--muted)] mt-1">{desc}</small></span></label>)}
+        </div>
+        <div className="pt-2 border-t border-[var(--border)]"><div className="text-[10px] font-bold mb-2">کانال‌های دریافت</div><div className="flex flex-wrap gap-2">{([ ["inApp", "داخل برنامه"], ["email", "ایمیل"], ["sms", "پیامک"] ] as const).map(([key, label]) => <label key={key} className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-[9px]"><input type="checkbox" checked={preferences[key]} onChange={() => togglePreference(key)} className="accent-[var(--gold)]"/>{label}</label>)}</div><p className="text-[8px] text-[var(--muted)] mt-2">اعلان‌های امنیتی و الزامی ممکن است مستقل از تنظیمات تبلیغاتی ارسال شوند. ارسال واقعی ایمیل و پیامک نیازمند اتصال سرویس است.</p></div>
+        <div className="pt-3 border-t border-[var(--border)] space-y-2"><div className="flex items-center justify-between gap-2"><div><div className="text-[10px] font-bold">هشدار قیمت طلا</div><p className="text-[8px] text-[var(--muted)] mt-1">اعلان در صورت عبور قیمت از محدوده تعیین‌شده</p></div><input type="checkbox" checked={priceAlert.enabled} onChange={e => savePriceAlert({ ...priceAlert, enabled: e.target.checked })} className="accent-[var(--gold)] w-4 h-4" aria-label="فعال‌سازی هشدار قیمت"/></div><div className="grid grid-cols-2 gap-2"><select value={priceAlert.direction} onChange={e => setPriceAlert(prev => ({ ...prev, direction: e.target.value as "above" | "below" }))} className="h-10 rounded-xl bg-[var(--panel-2)] border border-[var(--border)] px-2 text-[10px]"><option value="above">بالاتر از قیمت</option><option value="below">پایین‌تر از قیمت</option></select><input inputMode="numeric" value={priceAlert.target} onChange={e => setPriceAlert(prev => ({ ...prev, target: e.target.value.replace(/[^0-9۰-۹]/g, "") }))} placeholder="قیمت هدف (تومان)" className="h-10 rounded-xl bg-[var(--panel-2)] border border-[var(--border)] px-2 text-[10px]" /></div><button onClick={() => { savePriceAlert({ ...priceAlert, enabled: true }); }} disabled={!priceAlert.target || Number(priceAlert.target.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))) <= 0} className="h-9 px-4 rounded-lg bg-[var(--gold)] text-black text-[9px] font-black disabled:opacity-40">ذخیره هشدار قیمت</button><p className="text-[8px] text-[var(--muted)]">در نسخه فعلی هشدار به‌صورت محلی ذخیره می‌شود؛ پایش و ارسال خودکار پس از اتصال قیمت لحظه‌ای و سرویس اعلان فعال خواهد شد.</p></div>
+      </section>}
+
       {/* فیلترها */}
       <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
         {FILTERS.map((f) => {
@@ -132,8 +201,8 @@ export default function NotificationsPage() {
             f.id === "unread"
               ? unreadCount
               : f.id === "all"
-              ? items.length
-              : items.filter((n) => matchesFilter(n, f.id)).length;
+              ? items.filter(n => preferences[n.type]).length
+              : items.filter((n) => preferences[n.type] && matchesFilter(n, f.id)).length;
           return (
             <button
               key={f.id}

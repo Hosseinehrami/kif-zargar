@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { format, toFa } from "@/lib/format";
 import { SETTINGS } from "@/lib/settings";
+import { useToast } from "@/components/ui/Toast";
+import { ConfirmDialog } from "@/components/ui/Modal";
 
 // ---------- Icons ----------
 function EyeIcon({ closed }: { closed: boolean }) {
@@ -125,7 +127,7 @@ function fmtQty(asset: Asset, n: number): string {
   return format(n);
 }
 
-// ---------- Data (استفاده از SETTINGS برای قیمت طلا) ----------
+// ---------- Data ----------
 const initialAssets: Asset[] = [
   {
     id: "gold18", name: "طلای ۱۸ عیار", icon: "◈", amount: 12.45,
@@ -325,7 +327,9 @@ function TxRow({ t, showShare, showAssetName }: { t: Tx & { assetName?: string }
 }
 
 // ---------- Asset detail modal ----------
-function AssetDetailModal({ asset, onClose, onTrade }: { asset: Asset; onClose: () => void; onTrade: () => void; }) {
+type AssetAction = "p2p" | "physical" | "transfer" | "deposit" | "withdraw";
+
+function AssetDetailModal({ asset, onClose, onTrade, onAction }: { asset: Asset; onClose: () => void; onTrade: () => void; onAction: (action: AssetAction) => void; }) {
   const [filter, setFilter] = useState<"all" | "trade" | "transfer" | "cash">("all");
 
   useEffect(() => {
@@ -378,59 +382,53 @@ function AssetDetailModal({ asset, onClose, onTrade }: { asset: Asset; onClose: 
                   </div>
                   <div className="text-[10px] text-[var(--muted)]">معامله فوری با قیمت لحظه‌ای</div>
                 </button>
-                <button type="button" disabled title="به‌زودی" className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-2.5 text-right opacity-60 cursor-not-allowed">
+                <button type="button" onClick={() => onAction("p2p")} className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] hover:bg-[var(--panel)] transition p-2.5 text-right">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[var(--gold)] text-base">⇄</span>
                     <strong className="text-xs">بازار</strong>
-                    <span className="text-[9px] text-[var(--muted)]">به‌زودی</span>
                   </div>
                   <div className="text-[10px] text-[var(--muted)]">P2P با سایر کاربران</div>
                 </button>
               </>
             )}
             {isPhysical && (
-              <button type="button" disabled title="به‌زودی" className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-2.5 text-right opacity-60 cursor-not-allowed">
+              <button type="button" onClick={() => onAction("physical")} className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] hover:bg-[var(--panel)] transition p-2.5 text-right">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-sky-400 text-base">▣</span>
                   <strong className="text-xs">برداشت فیزیکی</strong>
-                  <span className="text-[9px] text-[var(--muted)]">به‌زودی</span>
                 </div>
                 <div className="text-[10px] text-[var(--muted)]">تحویل از شعبه</div>
               </button>
             )}
             {!isCash && (
-              <button type="button" disabled title="به‌زودی" className={`rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-2.5 text-right opacity-60 cursor-not-allowed ${!isPhysical ? "col-span-2" : ""}`}>
+              <button type="button" onClick={() => onAction("transfer")} className={`rounded-xl border border-[var(--border)] bg-[var(--panel-2)] hover:bg-[var(--panel)] transition p-2.5 text-right ${!isPhysical ? "col-span-2" : ""}`}>
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-violet-400 text-base">⇄</span>
                   <strong className="text-xs">انتقال</strong>
-                  <span className="text-[9px] text-[var(--muted)]">به‌زودی</span>
                 </div>
                 <div className="text-[10px] text-[var(--muted)]">به کیف زرگر دیگر</div>
               </button>
             )}
             {isCash && (
               <>
-                <button type="button" disabled title="به‌زودی" className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-2.5 text-right opacity-60 cursor-not-allowed">
+                <button type="button" onClick={() => onAction("deposit")} className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] hover:bg-[var(--panel)] transition p-2.5 text-right">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sky-400 text-base">↓</span>
                     <strong className="text-xs">واریز</strong>
-                    <span className="text-[9px] text-[var(--muted)]">به‌زودی</span>
                   </div>
                   <div className="text-[10px] text-[var(--muted)]">از حساب بانکی</div>
                 </button>
-                <button type="button" disabled title="به‌زودی" className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-2.5 text-right opacity-60 cursor-not-allowed">
+                <button type="button" onClick={() => onAction("withdraw")} className="rounded-xl border border-[var(--border)] bg-[var(--panel-2)] hover:bg-[var(--panel)] transition p-2.5 text-right">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-amber-400 text-base">↑</span>
                     <strong className="text-xs">برداشت</strong>
-                    <span className="text-[9px] text-[var(--muted)]">به‌زودی</span>
                   </div>
                   <div className="text-[10px] text-[var(--muted)]">به حساب بانکی</div>
                 </button>
-                <button type="button" disabled title="به‌زودی" className="col-span-2 rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-2.5 text-right opacity-60 cursor-not-allowed">
+                <button type="button" onClick={() => onAction("transfer")} className="col-span-2 rounded-xl border border-[var(--border)] bg-[var(--panel-2)] hover:bg-[var(--panel)] transition p-2.5 text-right">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-violet-400 text-base">⇄</span>
                     <strong className="text-xs">انتقال</strong>
-                    <span className="text-[9px] text-[var(--muted)]">به‌زودی</span>
                   </div>
                   <div className="text-[10px] text-[var(--muted)]">به کیف زرگر دیگر</div>
                 </button>
@@ -471,6 +469,7 @@ function AssetDetailModal({ asset, onClose, onTrade }: { asset: Asset; onClose: 
           )}
         </div>
       </div>
+
     </div>
   );
 }
@@ -576,11 +575,16 @@ function ReportModal({ transactions, onClose, onTrade }: { transactions: TxWithA
 // ---------- Page ----------
 export default function AssetsPage() {
   const router = useRouter();
+  const toast = useToast();
   const [assets] = useState(initialAssets);
   const [hideBalance, setHideBalance] = useState(false);
   const [selected, setSelected] = useState<Asset | null>(null);
   const [chartOpen, setChartOpen] = useState(true);
   const [reportOpen, setReportOpen] = useState(false);
+  
+  // State های مربوط به لغو سفارش بلوکه شده
+  const [cancelLockedAsset, setCancelLockedAsset] = useState<Asset | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const investValue = assets.filter((a) => a.kind !== "cash").reduce((s, a) => s + a.amount * a.pricePerUnit, 0);
   const cashValue = assets.filter((a) => a.kind === "cash").reduce((s, a) => s + a.amount * a.pricePerUnit, 0);
@@ -597,6 +601,16 @@ export default function AssetsPage() {
 
   const display = (n: number) => (hideBalance ? "••••••" : format(n));
   const profitPct = ((totalProfit / Math.max(totalValue - totalProfit, 1)) * 100).toFixed(1);
+
+  const handleCancelLocked = async () => {
+    if (!cancelLockedAsset) return;
+    setIsCancelling(true);
+    // شبیه‌سازی ارتباط با API
+    await new Promise((r) => setTimeout(r, 800));
+    toast.success(`سفارش ${cancelLockedAsset.name} با موفقیت لغو شد`);
+    setIsCancelling(false);
+    setCancelLockedAsset(null);
+  };
 
   return (
     <div className="px-2.5 sm:px-4 pt-2.5 sm:pt-3 pb-3 font-sans">
@@ -735,7 +749,13 @@ export default function AssetsPage() {
                 <div className="text-left shrink-0">
                   <div className="text-xs font-bold font-mono">{hideBalance ? "••••" : `${fmtQty(a, a.locked)} ${a.unit}`}</div>
                 </div>
-                <button type="button" disabled title="به‌زودی" className="text-[10px] text-[var(--gold)] border border-[var(--border)] rounded-md px-1.5 py-0.5 opacity-60 cursor-not-allowed shrink-0">لغو</button>
+                <button 
+                  type="button" 
+                  onClick={() => setCancelLockedAsset(a)} 
+                  className="text-[10px] text-[var(--gold)] border border-[var(--border)] rounded-md px-1.5 py-0.5 hover:bg-[var(--panel-2)] transition shrink-0"
+                >
+                  لغو
+                </button>
               </div>
             ))}
           </div>
@@ -788,8 +808,38 @@ export default function AssetsPage() {
         کیف زرگر · مدیریت هوشمند دارایی طلا
       </footer>
 
-      {selected && <AssetDetailModal asset={selected} onClose={() => setSelected(null)} onTrade={() => { setSelected(null); router.push("/trade"); }} />}
+      {selected && (
+        <AssetDetailModal
+          asset={selected}
+          onClose={() => setSelected(null)}
+          onTrade={() => { setSelected(null); router.push("/trade"); }}
+          onAction={(action) => {
+            setSelected(null);
+            const destinations: Record<AssetAction, string> = {
+              p2p: "/trade/p2p",
+              physical: "/wallet/physical",
+              transfer: "/wallet/transfer",
+              deposit: "/wallet/deposit",
+              withdraw: "/wallet/withdraw",
+            };
+            router.push(destinations[action]);
+          }}
+        />
+      )}
       {reportOpen && <ReportModal transactions={allTransactions} onClose={() => setReportOpen(false)} onTrade={() => { setReportOpen(false); router.push("/trade"); }} />}
+      
+      {/* Confirm Dialog برای لغو سفارش بلوکه شده */}
+      <ConfirmDialog
+        open={!!cancelLockedAsset}
+        onClose={() => !isCancelling && setCancelLockedAsset(null)}
+        onConfirm={handleCancelLocked}
+        title="لغو سفارش"
+        description={`آیا از لغو سفارش ${cancelLockedAsset?.name} مطمئن هستید؟`}
+        confirmText="لغو سفارش"
+        cancelText="انصراف"
+        variant="danger"
+        loading={isCancelling}
+      />
     </div>
   );
 }

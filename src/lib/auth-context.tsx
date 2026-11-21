@@ -18,6 +18,9 @@ export type AuthUser = {
   termsAcceptedAt?: number;
   termsVersion?: string;
   termsSignature?: string;
+  email?: string;
+  birthDate?: string;
+  address?: string;
 };
 
 type VerifyOtpResult = { isVerified: boolean; hasPin: boolean; };
@@ -43,6 +46,7 @@ type AuthContextType = {
   getSessionRemaining: () => { hours: number; minutes: number } | null;
   logout: () => void;
   signTerms: (pin: string) => Promise<{ success: boolean; signature?: string; error?: string }>;
+  updateProfile: (patch: Pick<AuthUser, "email" | "birthDate" | "address">) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -197,6 +201,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { hours: Math.floor(remain / 3600000), minutes: Math.floor((remain % 3600000) / 60000) };
   };
 
+  const updateProfile = (patch: Pick<AuthUser, "email" | "birthDate" | "address">) => {
+    setUser(prev => prev ? { ...prev, ...patch } : null);
+  };
+
   const logout = () => {
     setUser(null);
     sessionStorage.removeItem(UNLOCK_KEY);
@@ -213,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, isLoading, isLoggedIn, isVerified, hasPin, isTermsAccepted,
       sendOtp, verifyOtp, verifyShahkar, setPin, changePin, removePin, validatePin,
       unlockSession, lockSession, isSessionUnlocked, getSessionRemaining, logout,
-      signTerms,
+      signTerms, updateProfile,
     }}>
       {children}
     </AuthContext.Provider>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import type { BankCard } from "@/lib/bank-cards";
+export type { BankCard } from "@/lib/bank-cards";
 
 const toEnDigits = (s: string) =>
   s.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
@@ -19,16 +21,28 @@ const BANKS = [
   { id: "other", name: "سایر بانک‌ها", icon: "🏦" },
 ];
 
-export type BankCard = {
-  id: string;
-  bank: string;
-  last4: string;
-  iban: string;
-  cardNumber: string;
-  isDefault: boolean;
-};
-
 type Step = "form" | "verifying" | "success" | "error";
+
+function passesLuhn(value: string) {
+  let sum = 0;
+  let doubleDigit = false;
+  for (let i = value.length - 1; i >= 0; i--) {
+    let digit = Number(value[i]);
+    if (doubleDigit) { digit *= 2; if (digit > 9) digit -= 9; }
+    sum += digit;
+    doubleDigit = !doubleDigit;
+  }
+  return sum % 10 === 0;
+}
+
+function isValidIban(value: string) {
+  if (!/^IR\d{24}$/.test(value)) return false;
+  const rearranged = value.slice(4) + value.slice(0, 4);
+  const expanded = rearranged.replace(/[A-Z]/g, letter => String(letter.charCodeAt(0) - 55));
+  let remainder = 0;
+  for (const digit of expanded) remainder = (remainder * 10 + Number(digit)) % 97;
+  return remainder === 1;
+}
 
 export default function AddCardModal({
   onClose,
@@ -46,12 +60,12 @@ export default function AddCardModal({
   const [error, setError] = useState("");
 
   const shabaClean = toEnDigits(shabaDigits).replace(/\D/g, "").slice(0, 24);
-  const isShabaValid = shabaClean.length === 24;
+  const fullShaba = `IR${shabaClean}`;
+  const isShabaValid = shabaClean.length === 24 && isValidIban(fullShaba);
 
   const cardClean = toEnDigits(cardNumber).replace(/\D/g, "");
-  const isCardValid = /^\d{16}$/.test(cardClean);
+  const isCardValid = /^\d{16}$/.test(cardClean) && passesLuhn(cardClean);
 
-  const fullShaba = `IR${shabaClean}`;
   const isValid = isShabaValid && isCardValid;
 
   const userNationalId = user?.nationalId || "";
@@ -162,7 +176,7 @@ export default function AddCardModal({
                 </div>
                 <div className="text-[10px] text-[var(--muted)] mt-0.5">
                   {step === "form" && "اطلاعات حساب خود را وارد کنید"}
-                  {step === "verifying" && "استعلام از سامانه شاهکار"}
+                  {step === "verifying" && "بررسی آزمایشی اطلاعات حساب"}
                   {step === "success" && "کارت با موفقیت ثبت شد"}
                   {step === "error" && "لطفاً اطلاعات را بررسی کنید"}
                 </div>
@@ -255,7 +269,7 @@ export default function AddCardModal({
                 </div>
                 {shabaDigits && !isShabaValid && (
                   <p className="text-[9.5px] text-red-400 mb-2 -mt-1.5">
-                    {24 - shabaClean.length} رقم دیگر وارد کنید
+                    {shabaClean.length < 24 ? `${24 - shabaClean.length} رقم دیگر وارد کنید` : "شماره شبا معتبر نیست؛ رقم کنترلی را بررسی کنید."}
                   </p>
                 )}
 
@@ -281,13 +295,13 @@ export default function AddCardModal({
                   />
                 </div>
                 {cardNumber && !isCardValid && (
-                  <p className="text-[9.5px] text-red-400 mb-2 -mt-1.5">شماره کارت باید ۱۶ رقم باشد</p>
+                  <p className="text-[9.5px] text-red-400 mb-2 -mt-1.5">شماره کارت واردشده معتبر نیست؛ رقم کنترلی را بررسی کنید.</p>
                 )}
 
                 <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/30 mb-3 flex gap-2">
                   <span className="text-sm shrink-0">ℹ️</span>
                   <div className="text-[9.5px] text-sky-400 leading-relaxed">
-                    با کلیک روی «استعلام»، شبا و کد ملی شما به‌صورت خودکار از سامانه <b>شاهکار</b> بررسی می‌شود. نیازی به کد پیامکی نیست.
+                    در این نسخه نمایشی، بررسی مالکیت حساب شبیه‌سازی می‌شود. برای استعلام واقعی شبا و تطبیق مالکیت، اتصال امن به سرویس بانکی و شاهکار لازم است.
                   </div>
                 </div>
 

@@ -465,3 +465,19 @@ button { font: inherit; cursor: pointer; }
   .trade-page { padding: 20px 15px 20px; }
   .trade-heading { margin-bottom: 14px; }
 }
+
+
+@media print {
+  html, body { height: auto !important; overflow: visible !important; }
+  body * { visibility: hidden !important; }
+  .main-panel, .main-scroll { height: auto !important; overflow: visible !important; }
+  .reports-print-root, .reports-print-root * { visibility: visible !important; }
+  .reports-print-root { position: relative !important; inset: auto !important; width: 100% !important; max-width: none !important; padding: 12mm !important; margin: 0 !important; background: #fff !important; color: #111 !important; }
+  .reports-no-print { display: none !important; }
+  .reports-print-root section, .reports-print-root .rounded-2xl, .reports-print-root .rounded-xl { break-inside: avoid; border-color: #ddd !important; background: #fff !important; color: #111 !important; box-shadow: none !important; }
+  .reports-print-root table { color: #111 !important; }
+  .reports-print-root .reports-print-table { display: block !important; }
+  .reports-print-root .reports-print-mobile { display: none !important; }
+  .reports-print-root p, .reports-print-root span, .reports-print-root div, .reports-print-root h1, .reports-print-root h2 { color: #111 !important; }
+  @page { size: A4 portrait; margin: 8mm; }
+}

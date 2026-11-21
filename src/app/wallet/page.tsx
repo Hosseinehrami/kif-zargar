@@ -7,7 +7,8 @@ import { SETTINGS } from "@/lib/settings";
 import { useToast } from "@/components/ui/Toast";
 import TradeInvoice, { type TradeInvoiceData } from "@/components/TradeInvoice";
 import TransferReceipt, { type TransferReceiptData } from "@/components/TransferReceipt";
-import AddCardModal, { type BankCard } from "@/components/AddCardModal";
+import AddCardModal from "@/components/AddCardModal";
+import { useBankCards, type BankCard } from "@/lib/bank-cards";
 import DeleteCardModal from "@/components/DeleteCardModal";
 
 const displayAmount = (amount: number, type: "rial" | "gold") => {
@@ -157,10 +158,7 @@ export default function WalletPage() {
   const [invoiceTx, setInvoiceTx] = useState<TradeInvoiceData | null>(null);
   const [transferReceipt, setTransferReceipt] = useState<TransferReceiptData | null>(null);
   
-  const [bankCards, setBankCards] = useState<BankCard[]>([
-    { id: "card1", bank: "بانک ملی ایران", last4: "4589", iban: "IR820170000000123456789012", cardNumber: "6104337845891234", isDefault: true },
-    { id: "card2", bank: "بانک سامان", last4: "7823", iban: "IR980560000000987654321098", cardNumber: "6219861778235678", isDefault: false },
-  ]);
+  const { cards: bankCards, ready: bankCardsReady, addCard, removeCard, setDefault } = useBankCards();
   const [showAddCard, setShowAddCard] = useState(false);
   const [deleteCard, setDeleteCard] = useState<BankCard | null>(null);
 
@@ -365,19 +363,23 @@ export default function WalletPage() {
               <span>🏦</span>
               کارت‌های بانکی
             </h2>
-            <p className="text-[10px] text-[var(--muted)] mt-0.5 font-mono">{toFa(String(bankCards.length))} کارت ثبت شده</p>
+            <p className="text-[10px] text-[var(--muted)] mt-0.5 font-mono">{bankCardsReady ? `${toFa(String(bankCards.length))} کارت ثبت شده` : "در حال بارگذاری..."}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAddCard(true)}
-            className="text-[10px] font-bold text-[var(--gold)] border border-[var(--gold)]/30 rounded-lg px-2.5 py-1 hover:bg-[var(--gold)]/10 transition"
-          >
-            + افزودن
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => router.push("/profile/banks")} className="text-[9px] font-bold text-[var(--muted)] hover:text-[var(--gold)]">مدیریت</button>
+            <button
+              type="button"
+              onClick={() => setShowAddCard(true)}
+              disabled={!bankCardsReady}
+              className="text-[10px] font-bold text-[var(--gold)] disabled:opacity-40 border border-[var(--gold)]/30 rounded-lg px-2.5 py-1 hover:bg-[var(--gold)]/10 transition"
+            >
+              + افزودن
+            </button>
+          </div>
         </div>
 
         <div className="space-y-2">
-          {bankCards.map(card => (
+          {!bankCardsReady ? <div className="text-center py-4 text-[10px] text-[var(--muted)]">در حال بارگذاری حساب‌ها...</div> : bankCards.length === 0 ? <div className="text-center py-4 text-[10px] text-[var(--muted)]">حساب بانکی ثبت نشده است. از بخش مدیریت حساب‌ها یک حساب اضافه کنید.</div> : bankCards.map(card => (
             <div key={card.id} className="flex items-center gap-2.5 bg-[var(--panel-2)] border border-[var(--border)] rounded-xl p-2.5">
               <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center text-base shrink-0">🏦</div>
               <div className="flex-1 min-w-0">
@@ -389,6 +391,9 @@ export default function WalletPage() {
                 </div>
                 <div className="text-[10px] text-[var(--muted)] font-mono mt-0.5" dir="ltr">•••• {card.last4}</div>
               </div>
+              {!card.isDefault && (
+                <button type="button" onClick={() => { setDefault(card.id); toast.success("حساب پیش‌فرض تغییر کرد"); }} className="text-[8px] font-bold text-[var(--gold)] px-2 py-1 rounded-lg border border-[var(--gold)]/30 shrink-0">پیش‌فرض</button>
+              )}
               <button
                 type="button"
                 onClick={() => setDeleteCard(card)}
@@ -593,7 +598,7 @@ export default function WalletPage() {
         <AddCardModal
           onClose={() => setShowAddCard(false)}
           onAdd={(newCard) => {
-            setBankCards(prev => [...prev, newCard]);
+            addCard(newCard);
             setShowAddCard(false);
             toast.success("کارت با موفقیت اضافه شد");
           }}
@@ -605,7 +610,7 @@ export default function WalletPage() {
           card={deleteCard}
           onClose={() => setDeleteCard(null)}
           onDelete={() => {
-            setBankCards(prev => prev.filter(c => c.id !== deleteCard.id));
+            removeCard(deleteCard.id);
             setDeleteCard(null);
             toast.success("کارت حذف شد");
           }}

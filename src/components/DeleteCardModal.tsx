@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { BankCard } from "./AddCardModal";
+import type { BankCard } from "@/lib/bank-cards";
 
 const toEnDigits = (s: string) =>
   s.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { toFa } from "@/lib/format";
 
@@ -53,6 +54,15 @@ export default function SettingsPage() {
             </div>
           </button>
         )}
+
+        <Link href="/settings/sessions" className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--panel-2)] border-t border-[var(--border)] transition text-right">
+          <div className="w-10 h-10 rounded-xl bg-[var(--green)]/10 flex items-center justify-center text-lg shrink-0">💻</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-bold">نشست‌های فعال</div>
+            <div className="text-[10px] text-[var(--muted)] mt-0.5">مشاهده دستگاه‌های متصل و مدیریت دسترسی‌ها</div>
+          </div>
+          <span className="text-[var(--muted)] text-lg">‹</span>
+        </Link>
       </section>
 
       {/* اطلاعات حساب */}

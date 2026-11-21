@@ -6,6 +6,17 @@ import { SETTINGS } from "@/lib/settings";
 import { useToast } from "@/components/ui/Toast";
 
 type Side = "buy" | "sell";
+type LocalP2POrder = {
+  id: string;
+  side: Side;
+  amount: number;
+  filledAmount: number; // مقدار تکمیل‌شده آزمایشی
+  price: number;
+  grossTotal: number;
+  fee: number;
+  createdAt: string;
+  status: "open" | "cancelled";
+};
 
 const P2P_FEE_RATE = 0.001;
 
@@ -17,13 +28,13 @@ const generateP2POrderBook = (basePrice: number) => {
     asks.push({
       id: `a-${i}`,
       price: basePrice + (i + 1) * 5_000,
-      amount: Math.floor(Math.random() * 20 + 2),
+      amount: 4 + i * 3,
     });
 
     bids.push({
       id: `b-${i}`,
       price: basePrice - (i + 1) * 5_000,
-      amount: Math.floor(Math.random() * 20 + 2),
+      amount: 4 + i * 3,
     });
   }
 
@@ -44,6 +55,7 @@ function TradeSummary({
   totalToman,
   feeToman,
   feeGold,
+  totalLabel = "مبلغ کل (تومان)",
 }: {
   side: Side;
   amountNum: number;
@@ -51,6 +63,7 @@ function TradeSummary({
   totalToman: number;
   feeToman: number;
   feeGold: number;
+  totalLabel?: string;
 }) {
   if (amountNum <= 0) return null;
   const isBuy = side === "buy";
@@ -92,7 +105,7 @@ function TradeSummary({
       </div>
 
       <div className="flex justify-between items-center pt-1.5 border-t border-[var(--border)] mt-0.5">
-        <span className="text-[var(--muted)] font-bold">مبلغ کل (تومان)</span>
+        <span className="text-[var(--muted)] font-bold">{totalLabel}</span>
         <span className={`font-black text-[12px] px-1.5 py-0.5 rounded font-mono ${
           isBuy ? "text-[var(--red)] bg-[var(--red)]/10" : "text-[var(--green)] bg-[var(--green)]/10"
         }`}>{format(totalToman)} ت</span>
@@ -112,6 +125,8 @@ export default function P2PTradingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSelectedFromBook, setIsSelectedFromBook] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [mobileSection, setMobileSection] = useState<"orders" | "history">("orders");
+  const [mobileOrders, setMobileOrders] = useState<LocalP2POrder[]>([]);
 
   // ✅ setShowGuide داخل requestAnimationFrame تا خطای set-state-in-effect رفع شود
   useEffect(() => {
@@ -178,8 +193,163 @@ export default function P2PTradingPage() {
     }, 800);
   }
 
+  // Mobile-only calculations: keep desktop markup and its presentation unchanged.
+  const mobileAmount = Number(amountGold);
+  const mobilePrice = Number(pricePerGram);
+  const mobileGrossTotal = mobileAmount * mobilePrice;
+  const mobileFeeToman = mobileGrossTotal * P2P_FEE_RATE;
+  const mobileFeeGold = mobilePrice > 0 ? mobileFeeToman / mobilePrice : 0;
+  const mobileNetTotal = side === "buy"
+    ? mobileGrossTotal + mobileFeeToman
+    : Math.max(0, mobileGrossTotal - mobileFeeToman);
+  const mobileIsValid = Number.isFinite(mobileAmount)
+    && Number.isFinite(mobilePrice)
+    && mobileAmount >= 0.1
+    && mobilePrice > 0
+    && (side === "buy"
+      ? mobileNetTotal <= userTomanBalance
+      : mobileAmount + mobileFeeGold <= userGoldBalance);
+
+  function handleMobileAmountChange(value: string) {
+    const normalized = toEnDigits(value).replace(/[^\d.]/g, "");
+    const [integerPart = "", ...decimalParts] = normalized.split(".");
+    const decimalPart = decimalParts.join("").slice(0, 3);
+    setAmountGold(decimalParts.length ? `${integerPart}.${decimalPart}` : integerPart);
+    setActivePercent(null);
+  }
+
+  function setMobileAmountPercent(percent: number) {
+    if (!Number.isFinite(mobilePrice) || mobilePrice <= 0) {
+      toast.error("ابتدا قیمت معتبر وارد کنید.");
+      return;
+    }
+    const maxGold = side === "buy"
+      ? userTomanBalance / (mobilePrice * (1 + P2P_FEE_RATE))
+      : userGoldBalance / (1 + P2P_FEE_RATE);
+    const safeAmount = Math.floor(maxGold * percent / 100 * 1000) / 1000;
+    setAmountGold(safeAmount.toFixed(3));
+    setActivePercent(percent);
+  }
+
+  function handleMobileSubmit() {
+    if (!mobileIsValid) return;
+    const order: LocalP2POrder = {
+      id: `local-${Date.now()}`,
+      side,
+      amount: mobileAmount,
+      // مقدار پرشدن صرفاً برای نمایش رابط کاربری و به‌صورت آزمایشی تولید می‌شود.
+      filledAmount: Math.round(mobileAmount * (0.35 + Math.random() * 0.5) * 1000) / 1000,
+      price: mobilePrice,
+      grossTotal: mobileGrossTotal,
+      fee: side === "buy" ? mobileFeeToman : mobileFeeGold,
+      createdAt: new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }),
+      status: "open",
+    };
+    setMobileOrders((current) => [order, ...current]);
+    setAmountGold("");
+    setActivePercent(null);
+    setIsSelectedFromBook(false);
+    toast.info("این سفارش فقط در همین صفحه و به‌صورت آزمایشی ثبت شد؛ هنوز به سرور یا کیف پول متصل نیست.", 6000);
+  }
+
+  function cancelMobileOrder(orderId: string) {
+    setMobileOrders((current) => current.map((order) =>
+      order.id === orderId ? { ...order, status: "cancelled" } : order
+    ));
+    toast.success("سفارش آزمایشی لغو شد.");
+  }
+
   return (
-    <div className="h-[calc(100dvh-130px)] flex flex-col bg-[var(--bg)] text-[var(--text)] font-sans" dir="rtl">
+    <>
+    {/* MOBILE ONLY: P2P layout styled like leverage page. Desktop untouched. */}
+    <div className="lg:hidden h-[calc(100dvh-130px)] min-h-0 flex flex-col bg-[var(--bg)] text-[var(--text)] font-sans overflow-hidden" dir="rtl">
+      <header className="shrink-0 flex items-center justify-between px-2 py-1.5 border-b border-[var(--border)] bg-[var(--panel)] h-11">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5"><span className="font-bold text-xs">طلا / تومان</span><span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--gold)]/10 border border-[var(--gold)]/20 text-[var(--gold)]">P2P</span><button type="button" onClick={() => setShowGuide(true)} className="text-[var(--muted)] p-1" aria-label="راهنمای P2P">ⓘ</button></div>
+          <div className="text-[9px] text-[var(--muted)]">قیمت بازار</div>
+        </div>
+        <div className="text-left"><div className="text-xs font-black text-[var(--green)] font-mono">{format(marketPrice)} <span className="text-[9px] font-normal">تومان</span></div><div className="text-[9px] text-[var(--muted)]">بازار نقدی</div></div>
+      </header>
+
+      {/* Top trade area: order book LEFT, buy/sell card RIGHT */}
+      <div className="grid grid-cols-2 gap-1.5 px-1.5 py-1.5 shrink-0 min-h-0" dir="ltr">
+        <section className="min-w-0 rounded-lg border border-[var(--border)] bg-[var(--panel)] overflow-hidden" dir="rtl">
+          <div className="flex items-center justify-between px-1.5 py-1 border-b border-[var(--border)]"><span className="text-[10px] font-bold">دفتر سفارشات</span><span className="text-[8px] text-[var(--muted)]">نمونه نمایشی</span></div>
+          <div className="grid grid-cols-2 text-[8px] text-[var(--muted)] px-1.5 py-1"><span>قیمت فروش</span><span className="text-left">مقدار (گرم)</span></div>
+          {orderBook.asks.slice(0,4).map(a => <button type="button" key={a.id} onClick={() => {setSide("buy");handleSelectOffer(a.price);}} className="w-full grid grid-cols-2 px-1.5 py-1 border-b border-[var(--border)]/40 text-[9px]"><span className="text-[var(--red)] font-mono truncate">{format(a.price)}</span><span className="text-left font-mono">{toFa(String(a.amount))}</span></button>)}
+          <div className="px-1.5 py-1 text-center font-bold text-[10px] border-y border-[var(--border)] bg-[var(--panel-2)] font-mono">{format(marketPrice)}</div>
+          {orderBook.bids.slice(0,4).map(b => <button type="button" key={b.id} onClick={() => {setSide("sell");handleSelectOffer(b.price);}} className="w-full grid grid-cols-2 px-1.5 py-1 border-b border-[var(--border)]/40 text-[9px]"><span className="text-[var(--green)] font-mono truncate">{format(b.price)}</span><span className="text-left font-mono">{toFa(String(b.amount))}</span></button>)}
+        </section>
+        <section className="min-w-0 rounded-lg border border-[var(--border)] bg-[var(--panel)] p-2 space-y-2" dir="rtl">
+          <div className="flex gap-1"><button type="button" onClick={() => {setSide("buy");setIsSelectedFromBook(false);setActivePercent(null);}} className={`flex-1 h-8 rounded-md text-[10px] font-bold ${side === "buy" ? "bg-[var(--green)] text-white" : "bg-[var(--panel-2)] text-[var(--muted)] border border-[var(--border)]"}`}>خرید</button><button type="button" onClick={() => {setSide("sell");setIsSelectedFromBook(false);setActivePercent(null);}} className={`flex-1 h-8 rounded-md text-[10px] font-bold ${side === "sell" ? "bg-[var(--red)] text-white" : "bg-[var(--panel-2)] text-[var(--muted)] border border-[var(--border)]"}`}>فروش</button></div>
+          <div className="text-[9px] text-[var(--muted)] leading-4">موجودی آزمایشی {side === "buy" ? "تومانی" : "طلا"}<div className="font-bold text-[var(--text)]">{side === "buy" ? `${format(userTomanBalance)} تومان` : `${toFa(userGoldBalance.toString())} گرم`}</div></div>
+          {isSelectedFromBook && <div className="text-[8px] rounded bg-[var(--gold)]/10 border border-[var(--gold)]/30 p-1 text-[var(--gold)]">قیمت انتخاب‌شده از دفتر <button type="button" onClick={() => setIsSelectedFromBook(false)}>×</button></div>}
+          <label className="block"><span className="block text-[9px] text-[var(--muted)] mb-1">قیمت هر گرم</span><div className="flex items-center gap-1 border border-[var(--border)] rounded-md bg-[var(--panel-2)] px-1.5 h-8"><input type="text" inputMode="numeric" dir="ltr" value={pricePerGram} onChange={(e) => {setPricePerGram(toEnDigits(e.target.value).replace(/\D/g, ""));setIsSelectedFromBook(false);}} className="w-full bg-transparent outline-none text-left text-[10px] font-bold"/><span className="text-[8px] text-[var(--muted)]">تومان</span></div></label>
+          <label className="block"><span className="block text-[9px] text-[var(--muted)] mb-1">مقدار طلا (گرم)</span><div className="flex items-center gap-1 border border-[var(--border)] rounded-md bg-[var(--panel-2)] px-1.5 h-8"><input type="text" inputMode="decimal" dir="ltr" value={amountGold} onChange={(e) => handleMobileAmountChange(e.target.value)} placeholder="0.000" className="w-full bg-transparent outline-none text-left text-[10px] font-bold"/><span className="text-[8px] text-[var(--muted)]">گرم</span></div></label>
+          <div className="flex gap-0.5">{[100,75,50,25].map(p => <button type="button" key={p} onClick={() => setMobileAmountPercent(p)} className={`flex-1 h-6 rounded text-[8px] font-bold border ${activePercent === p ? (side === "buy" ? "bg-[var(--green)] text-white border-[var(--green)]" : "bg-[var(--red)] text-white border-[var(--red)]") : "bg-[var(--panel-2)] text-[var(--muted)] border-[var(--border)]"}`}>{toFa(String(p))}٪</button>)}</div>
+          {amountNum > 0 && !mobileIsValid && <p className="text-[8px] text-[var(--red)]">موجودی کافی نیست یا مقدار و قیمت معتبر نیست.</p>}
+          {Number.isFinite(mobileAmount) && mobileAmount > 0 && (
+            <TradeSummary
+              side={side}
+              amountNum={mobileAmount}
+              priceNum={mobilePrice || 0}
+              totalToman={mobileNetTotal || 0}
+              feeToman={mobileFeeToman || 0}
+              feeGold={mobileFeeGold || 0}
+              totalLabel={side === "buy" ? "مبلغ قابل پرداخت" : "مبلغ دریافتی"}
+            />
+          )}
+          <button type="button" onClick={handleMobileSubmit} disabled={!mobileIsValid} className={`w-full h-8 rounded-md font-bold text-[10px] text-white ${side === "buy" ? "bg-[var(--green)]" : "bg-[var(--red)]"} disabled:opacity-50`}>{`ثبت ${side === "buy" ? "خرید" : "فروش"}`}</button>
+        </section>
+      </div>
+      {/* Open orders and history remain beneath both columns */}
+      <section className="flex-1 min-h-0 mx-1.5 mb-1 rounded-lg border border-[var(--border)] bg-[var(--panel)] overflow-hidden flex flex-col">
+        <div className="grid grid-cols-2 text-[10px] font-bold border-b border-[var(--border)] shrink-0">
+          <button type="button" onClick={() => setMobileSection("orders")} className={`py-2 ${mobileSection === "orders" ? "text-[var(--gold)] border-b-2 border-[var(--gold)]" : "text-[var(--muted)]"}`}>سفارشات باز ({toFa(String(mobileOrders.filter((order) => order.status === "open").length))})</button>
+          <button type="button" onClick={() => setMobileSection("history")} className={`py-2 ${mobileSection === "history" ? "text-[var(--gold)] border-b-2 border-[var(--gold)]" : "text-[var(--muted)]"}`}>تاریخچه ({toFa(String(mobileOrders.filter((order) => order.status === "cancelled").length))})</button>
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
+          {mobileSection === "orders" ? (
+            mobileOrders.filter((order) => order.status === "open").length === 0 ? (
+              <div className="h-full min-h-16 flex items-center justify-center text-[9px] text-[var(--muted)]">سفارش بازی ندارید.</div>
+            ) : mobileOrders.filter((order) => order.status === "open").map((order) => (
+              <div key={order.id} className="rounded-md border border-[var(--border)] bg-[var(--panel-2)] p-2 text-[9px]">
+                <div className="flex items-center justify-between gap-2 mb-1"><strong className={order.side === "buy" ? "text-[var(--green)]" : "text-[var(--red)]"}>{order.side === "buy" ? "خرید طلا" : "فروش طلا"}</strong><span className="text-[var(--muted)]">{order.createdAt}</span></div>
+                <div className="grid grid-cols-3 gap-1 text-[var(--muted)]"><span>مقدار کل: <b className="text-[var(--text)]">{toFa(order.amount.toFixed(3))} گرم</b></span><span>قیمت: <b className="text-[var(--text)]">{format(order.price)}</b></span><span>کل: <b className="text-[var(--text)]">{format(order.grossTotal)}</b></span></div>
+                <div className="mt-2 rounded-md border border-[var(--border)] bg-[var(--panel)]/70 p-2">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="font-bold text-[var(--text)]">وضعیت تکمیل سفارش</span>
+                    <span className="text-[var(--green)] font-bold font-mono">{toFa(String(Math.round(Math.min(100, Math.max(0, order.filledAmount / order.amount * 100)))))}٪</span>
+                  </div>
+                  <div className="h-[2px] rounded-full bg-[var(--border)] overflow-hidden" dir="ltr" role="progressbar" aria-label="درصد تکمیل آزمایشی سفارش" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(100, Math.max(0, order.filledAmount / order.amount * 100)))}>
+                    <div className="h-full rounded-full bg-[var(--green)] transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, order.filledAmount / order.amount * 100))}%` }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-1.5">
+                    <span className="text-[var(--muted)]">انجام‌شده: <b className="text-[var(--green)]">{toFa(order.filledAmount.toFixed(3))} گرم</b></span>
+                    <span className="text-left text-[var(--muted)]">باقی‌مانده: <b className="text-[var(--text)]">{toFa(Math.max(0, order.amount - order.filledAmount).toFixed(3))} گرم</b></span>
+                  </div>
+                  <div className="text-[8px] text-[var(--gold)] mt-1">مقادیر و نوار پیشرفت صرفاً نمایشی و آزمایشی هستند.</div>
+                </div>
+                <div className="flex justify-end mt-2"><button type="button" onClick={() => cancelMobileOrder(order.id)} className="px-2 py-1 rounded border border-[var(--red)]/40 text-[var(--red)]">لغو سفارش آزمایشی</button></div>
+              </div>
+            ))
+          ) : (
+            mobileOrders.filter((order) => order.status === "cancelled").length === 0 ? (
+              <div className="h-full min-h-16 flex items-center justify-center text-[9px] text-[var(--muted)]">تاریخچه‌ای وجود ندارد.</div>
+            ) : mobileOrders.filter((order) => order.status === "cancelled").map((order) => (
+              <div key={order.id} className="rounded-md border border-[var(--border)] bg-[var(--panel-2)] p-2 text-[9px] flex items-center justify-between gap-2"><span className={order.side === "buy" ? "text-[var(--green)]" : "text-[var(--red)]"}>{order.side === "buy" ? "خرید" : "فروش"} · {toFa(order.amount.toFixed(3))} گرم</span><span className="text-[var(--muted)]">لغو شده · {order.createdAt}</span></div>
+            ))
+          )}
+        </div>
+      </section>
+    </div>
+
+
+    {showGuide && <div className="lg:hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3" onClick={() => setShowGuide(false)}><div className="w-full max-w-sm rounded-xl bg-[var(--panel)] border border-[var(--border)] shadow-2xl" onClick={(e) => e.stopPropagation()}><div className="flex items-center justify-between p-3 border-b border-[var(--border)]"><strong className="text-xs">راهنمای معامله P2P</strong><button type="button" onClick={() => setShowGuide(false)} className="p-1 text-[var(--muted)]">✕</button></div><div className="p-3 space-y-3 text-[10px] leading-relaxed"><p>۱. قیمت را از دفتر سفارش انتخاب کنید یا قیمت دلخواه وارد کنید.</p><p>۲. مقدار طلا یا درصد موجودی را مشخص کنید. مبلغ و کارمزد به‌صورت خودکار محاسبه می‌شود.</p><p>۳. پیش از ثبت درخواست، خلاصه معامله و موجودی را بررسی کنید.</p></div><div className="p-2 border-t border-[var(--border)]"><button type="button" onClick={() => setShowGuide(false)} className="w-full h-9 rounded-lg bg-[var(--gold)] text-black text-xs font-bold">متوجه شدم</button></div></div></div>}
+
+
+    {/* DESKTOP: original markup preserved */}
+    <div className="hidden lg:flex h-[calc(100dvh-130px)] flex-col bg-[var(--bg)] text-[var(--text)] font-sans" dir="rtl">
 
       <div className="flex items-center justify-between px-3 py-1 border-b border-[var(--border)] bg-[var(--panel)] shrink-0 h-10">
         <div className="flex items-center gap-3">
@@ -296,7 +466,7 @@ export default function P2PTradingPage() {
             </div>
 
             <div className="flex flex-row-reverse gap-1.5 mt-1.5">
-              {[25, 50, 75, 100].map((p) => {
+              {[100, 75, 50, 25].map((p) => {
                 const isActive = activePercent === p;
                 return (
                   <button
@@ -392,5 +562,6 @@ export default function P2PTradingPage() {
       )}
 
     </div>
+    </>
   );
 }
