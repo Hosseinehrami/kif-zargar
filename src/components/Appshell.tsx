@@ -144,7 +144,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // rAF to avoid synchronous setState in effect (avoids react-hooks/set-state-in-effect)
     const raf = requestAnimationFrame(() => {
       setTheme(initialTheme);
       setMounted(true);
@@ -350,6 +349,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
                   <Link href="/profile" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">
                     <span className="w-[14px] text-center">👤</span> پروفایل کاربری
+                  </Link>
+
+                  {/* 👈 کلاس border-t به این لینک اضافه شد تا از پروفایل جدا شود */}
+                  <Link
+                    href="/staking"
+                    onClick={() => setProfileOpen(false)}
+                    className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]"
+                  >
+                    <span className="w-[14px] text-center">💰</span>
+                    استیک طلا
                   </Link>
 
                   <Link href="/reports" onClick={() => setProfileOpen(false)} className="w-full text-right px-3 py-2.5 text-xs text-[var(--text)] hover:bg-[var(--panel-2)] transition flex items-center gap-2 border-t border-[var(--border)]">

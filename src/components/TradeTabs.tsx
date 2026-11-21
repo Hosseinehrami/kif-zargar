@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 
 const tabs = [
   { id: "instant",  label: "آنّی",    icon: "⚡", href: "/trade" },
-  { id: "leverage", label: "اهرم‌دار", icon: "🎚️", href: "/trade/leverage" },
   { id: "p2p",      label: "P2P",     icon: "🤝", href: "/trade/p2p" },
+  { id: "leverage", label: "اهرم‌دار", icon: "🎚️", href: "/trade/leverage" },
 ] as const;
 
 export default function TradeTabs() {
